@@ -14,12 +14,12 @@
 
 ## 3. Freeze Nine-Family Blind Benchmark
 
-- [ ] 3.1 Create a canonical blind-suite manifest with at least one non-leaking user-style prompt for each of the nine required symptom families.
-- [ ] 3.2 Store the canonical suite under `validation/blind-tests/<YYYY-MM-DD>_nine-family-baseline/` with the frozen rubric, prompt manifest, and result-record template.
-- [ ] 3.3 Run each prompt in an isolated Codex App thread without naming the Skill, retrieval implementation, expected module, handbook anchor, or acceptance criteria.
-- [ ] 3.4 Archive exact prompts, thread IDs, raw responses, and per-case scoring notes for every isolated thread.
-- [ ] 3.5 Summarize symptom classification, basic checks, single-change discipline, metric and rollback quality, traceability, retrieval misses, synonym-expansion needs, module stacking, and response-concision deviations.
-- [ ] 3.6 Re-run baseline validation, perform first-principles review and simplification of the benchmark artifacts, confirm Git scope, and create an intentional benchmark commit.
+- [x] 3.1 Create a canonical blind-suite manifest with at least one non-leaking user-style prompt for each of the nine required symptom families.
+- [x] 3.2 Store the canonical suite under `validation/blind-tests/<YYYY-MM-DD>_nine-family-baseline/` with the frozen rubric, prompt manifest, and result-record template.
+- [x] 3.3 Run each prompt in an isolated Codex App thread without naming the Skill, retrieval implementation, expected module, handbook anchor, or acceptance criteria.
+- [x] 3.4 Archive exact prompts, thread IDs, raw responses, and per-case scoring notes for every isolated thread.
+- [x] 3.5 Summarize symptom classification, basic checks, single-change discipline, metric and rollback quality, traceability, retrieval misses, synonym-expansion needs, module stacking, and response-concision deviations.
+- [x] 3.6 Re-run baseline validation, perform first-principles review and simplification of the benchmark artifacts, confirm Git scope, and create an intentional benchmark commit.
 
 ## 4. Prepare Rules-MCP Architecture Gate
 
