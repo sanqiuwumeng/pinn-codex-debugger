@@ -14,7 +14,7 @@ Local, read-only retrieval experiments for PINN symptom routing and handbook evi
 
 ```powershell
 $env:PYTHONUTF8='1'
-Set-Location 'E:\vibe coding\pinn-codex-debugger.worktrees\hybrid-rag\mcp-server'
+Set-Location 'E:\vibe coding\pinn-codex-debugger.worktrees\rules-mcp\mcp-server'
 & 'C:\Users\Mli\.conda\envs\pytorch2.3.1\python.exe' -m rules_mcp
 ```
 

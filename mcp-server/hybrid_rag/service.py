@@ -1,0 +1,206 @@
+"""Hybrid retrieval service with explicit deterministic dependencies."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from rules_mcp.models import DiagnosisRequest, SymptomRule
+from rules_mcp.service import RulesRetrievalService
+
+from .index import HybridSectionIndex, character_ngrams, normalized_query_terms
+from .lexicon import Concept, concepts_for_text, expanded_terms_for_concepts
+from .models import HybridQuery, HybridSearchResponse, RankedSection, ScoreBreakdown
+
+
+@dataclass(frozen=True)
+class RouteResult:
+    family: str
+    anchors: tuple[str, ...]
+    matched_concepts: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class QueryProfile:
+    terms: frozenset[str]
+    expanded_terms: frozenset[str]
+    concepts: frozenset[str]
+    char_ngrams: frozenset[str]
+
+
+class HybridRetrievalService:
+    """Rank handbook sections using rules anchors plus paraphrase recall."""
+
+    def __init__(
+        self,
+        section_index: HybridSectionIndex,
+        rules_service: RulesRetrievalService,
+        rules: tuple[SymptomRule, ...],
+        concepts: tuple[Concept, ...],
+    ) -> None:
+        self._section_index = section_index
+        self._rules_service = rules_service
+        self._rules = rules
+        self._concepts = concepts
+
+    def search(self, request: HybridQuery) -> HybridSearchResponse:
+        rules_record = self._rules_service.diagnose(
+            DiagnosisRequest(
+                symptom=request.query,
+                evidence=request.evidence,
+                max_sections=request.max_sections,
+            )
+        )
+        route = self._route(request.query, request.anchors, rules_record.family)
+        profile = self._profile(request.query)
+        anchors = request.anchors or route.anchors or rules_record.candidate_anchors
+        ranked = self._rank(profile, anchors, request.max_sections)
+        return HybridSearchResponse(
+            query=request.query,
+            inferred_family=route.family,
+            rules_family=rules_record.family,
+            matched_concepts=route.matched_concepts,
+            source_sha256=self._section_index.source_sha256,
+            backend=self._section_index.backend,
+            index_inputs=self._section_index.index_inputs,
+            ranked_sections=ranked,
+        )
+
+    def _route(
+        self,
+        query: str,
+        request_anchors: tuple[str, ...],
+        rules_family: str,
+    ) -> RouteResult:
+        query_concepts = frozenset(concepts_for_text(query, self._concepts))
+        normalized_query = query.casefold()
+        scored: list[tuple[int, int, SymptomRule, tuple[str, ...]]] = []
+
+        for order, rule in enumerate(self._rules):
+            keyword_hits = tuple(
+                keyword
+                for keyword in rule.keywords
+                if keyword.casefold() in normalized_query
+            )
+            rule_concepts = set(
+                concepts_for_text(
+                    " ".join(rule.keywords + rule.candidate_anchors),
+                    self._concepts,
+                )
+            )
+            concept_hits = tuple(sorted(query_concepts & rule_concepts))
+            score = len(keyword_hits) * 2 + sum(
+                _concept_route_weight(concept) for concept in concept_hits
+            )
+            if score > 0:
+                scored.append((score, order, rule, concept_hits))
+
+        if scored:
+            scored.sort(key=lambda item: (-item[0], item[1]))
+            _, _, rule, concept_hits = scored[0]
+            return RouteResult(rule.family, request_anchors or rule.candidate_anchors, concept_hits)
+
+        return RouteResult(rules_family, request_anchors, tuple(sorted(query_concepts)))
+
+    def _profile(self, query: str) -> QueryProfile:
+        concepts = concepts_for_text(query, self._concepts)
+        terms = normalized_query_terms(query)
+        expanded = expanded_terms_for_concepts(concepts, self._concepts)
+        return QueryProfile(
+            terms=frozenset(terms),
+            expanded_terms=frozenset(terms + tuple(term.casefold() for term in expanded)),
+            concepts=frozenset(concepts),
+            char_ngrams=frozenset(character_ngrams(query)),
+        )
+
+    def _rank(
+        self,
+        profile: QueryProfile,
+        anchors: tuple[str, ...],
+        max_sections: int,
+    ) -> tuple[RankedSection, ...]:
+        scored: list[tuple[float, int, RankedSection]] = []
+
+        for document in self._section_index.documents:
+            score_parts = self._score(document, profile, anchors)
+            if score_parts.total <= 0:
+                continue
+            matched_terms = tuple(sorted(profile.expanded_terms & document.terms))
+            matched_concepts = tuple(sorted(profile.concepts & document.concepts))
+            matched_anchors = _matched_anchors(document.section.text, anchors)
+            ranked = RankedSection(
+                heading=document.section.heading,
+                line_start=document.section.line_start,
+                line_end=document.section.line_end,
+                score=score_parts.total,
+                score_parts=score_parts,
+                matched_terms=matched_terms,
+                matched_concepts=matched_concepts,
+                matched_anchors=matched_anchors,
+                excerpt=_excerpt(document.section.text),
+            )
+            scored.append((score_parts.total, document.section.line_start, ranked))
+
+        scored.sort(key=lambda item: (-item[0], item[1]))
+        return tuple(item[2] for item in scored[:max_sections])
+
+    def _score(
+        self,
+        document,
+        profile: QueryProfile,
+        anchors: tuple[str, ...],
+    ) -> ScoreBreakdown:
+        term_overlap = profile.terms & document.terms
+        expanded_overlap = profile.expanded_terms & document.terms
+        concept_overlap = profile.concepts & document.concepts
+        heading_term_overlap = profile.expanded_terms & document.heading_terms
+        heading_concept_overlap = profile.concepts & document.heading_concepts
+        ngram_score = _jaccard(profile.char_ngrams, document.char_ngrams) * 8.0
+        return ScoreBreakdown(
+            anchor=_anchor_score(document.section.heading, document.section.text, anchors),
+            concept=len(concept_overlap) * 5.0,
+            lexical=len(term_overlap) * 2.0 + len(expanded_overlap) * 0.35,
+            ngram=ngram_score,
+            heading=len(heading_term_overlap) * 2.5 + len(heading_concept_overlap) * 3.0,
+            specificity=_specificity_score(document.section.level, document.section.heading),
+        )
+
+
+def _anchor_score(heading: str, text: str, anchors: tuple[str, ...]) -> float:
+    normalized_heading = heading.casefold()
+    normalized_text = text.casefold()
+    score = 0.0
+    for order, anchor in enumerate(anchors):
+        normalized_anchor = anchor.casefold()
+        weight = max(2.0, 10.0 - order * 2.0)
+        heading_hit = normalized_anchor in normalized_heading
+        text_hit = normalized_anchor in normalized_text
+        score += weight if heading_hit else 0.0
+        score += weight * 0.35 if text_hit and not heading_hit else 0.0
+    return score
+
+
+def _concept_route_weight(concept: str) -> int:
+    return 3 if concept == "boundary" else 4
+
+
+def _specificity_score(level: int, heading: str) -> float:
+    score = 2.0 if level == 1 else 0.0
+    score += 1.0 if heading.startswith("检查卡") else 0.0
+    score -= 1.0 if "诊断卡" in heading and not heading.startswith("检查卡") else 0.0
+    return score
+
+
+def _matched_anchors(text: str, anchors: tuple[str, ...]) -> tuple[str, ...]:
+    normalized_text = text.casefold()
+    return tuple(anchor for anchor in anchors if anchor.casefold() in normalized_text)
+
+
+def _jaccard(left: frozenset[str], right: frozenset[str]) -> float:
+    if not left or not right:
+        return 0.0
+    return len(left & right) / len(left | right)
+
+
+def _excerpt(text: str) -> str:
+    excerpt = " ".join(text.split())
+    return f"{excerpt[:357]}..." if len(excerpt) > 360 else excerpt

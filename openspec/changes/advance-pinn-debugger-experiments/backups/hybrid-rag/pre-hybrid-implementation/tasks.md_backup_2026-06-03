@@ -39,23 +39,23 @@
 
 ## 6. Prepare Hybrid-RAG Architecture Gate
 
-- [x] 6.1 Pause and obtain an explicit user reply of `Yes` before implementing the `hybrid-rag` architecture or installing semantic-retrieval dependencies.
-- [x] 6.2 Select and record the local semantic backend, index format, package versions, resource cost, and sandbox plan.
-- [x] 6.3 In `exp/hybrid-rag`, integrate the reviewed baseline and frozen-benchmark commits; explicitly decide whether the hybrid layer reuses the deterministic extractor through an isolated boundary.
-- [x] 6.4 Review `git status` in `exp/hybrid-rag` and back up every existing file before revision.
+- [ ] 6.1 Pause and obtain an explicit user reply of `Yes` before implementing the `hybrid-rag` architecture or installing semantic-retrieval dependencies.
+- [ ] 6.2 Select and record the local semantic backend, index format, package versions, resource cost, and sandbox plan.
+- [ ] 6.3 In `exp/hybrid-rag`, integrate the reviewed baseline and frozen-benchmark commits; explicitly decide whether the hybrid layer reuses the deterministic extractor through an isolated boundary.
+- [ ] 6.4 Review `git status` in `exp/hybrid-rag` and back up every existing file before revision.
 
 ## 7. Implement Hybrid-RAG Retrieval
 
-- [x] 7.1 Scaffold a physically isolated retrieval adapter with explicit query input and ranked-section output schemas.
-- [x] 7.2 Build a reproducible handbook section index that records source hash, heading, anchor, section text boundary, and semantic-index inputs.
-- [x] 7.3 Implement semantic recall for paraphrased symptoms and deterministic source traceability for every ranked result.
-- [x] 7.4 Implement section ranking so focused handbook sections outrank generic mentions of common module names.
-- [x] 7.5 Add tests for unseen paraphrases, repeated ranking behavior, provenance, and noisy Markdown section handling.
-- [x] 7.6 Replay the frozen blind benchmark plus paraphrase variants, archive raw evidence, and compare `hybrid-rag` against both preceding branches.
-- [x] 7.7 Run the closed-loop review `Debug -> First-Principles Refactoring -> Simplification`, validate the hybrid experiment, confirm Git scope, and create an intentional `exp/hybrid-rag` commit.
+- [ ] 7.1 Scaffold a physically isolated retrieval adapter with explicit query input and ranked-section output schemas.
+- [ ] 7.2 Build a reproducible handbook section index that records source hash, heading, anchor, section text boundary, and semantic-index inputs.
+- [ ] 7.3 Implement semantic recall for paraphrased symptoms and deterministic source traceability for every ranked result.
+- [ ] 7.4 Implement section ranking so focused handbook sections outrank generic mentions of common module names.
+- [ ] 7.5 Add tests for unseen paraphrases, repeated ranking behavior, provenance, and noisy Markdown section handling.
+- [ ] 7.6 Replay the frozen blind benchmark plus paraphrase variants, archive raw evidence, and compare `hybrid-rag` against both preceding branches.
+- [ ] 7.7 Run the closed-loop review `Debug -> First-Principles Refactoring -> Simplification`, validate the hybrid experiment, confirm Git scope, and create an intentional `exp/hybrid-rag` commit.
 
 ## 8. Final Comparison
 
-- [x] 8.1 Produce a three-branch comparison report covering diagnostic quality, retrieval quality, traceability, dependency cost, runtime cost, and known failure cases.
-- [x] 8.2 Verify that source handbook content remains unchanged and that all experiment evidence is preserved.
-- [x] 8.3 Review whether the completed OpenSpec change is ready to archive without deleting any user data.
+- [ ] 8.1 Produce a three-branch comparison report covering diagnostic quality, retrieval quality, traceability, dependency cost, runtime cost, and known failure cases.
+- [ ] 8.2 Verify that source handbook content remains unchanged and that all experiment evidence is preserved.
+- [ ] 8.3 Review whether the completed OpenSpec change is ready to archive without deleting any user data.

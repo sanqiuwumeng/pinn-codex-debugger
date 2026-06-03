@@ -1,0 +1,191 @@
+"""Auditable concept lexicon for paraphrase recall."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Concept:
+    name: str
+    terms: tuple[str, ...]
+
+
+def build_concept_lexicon() -> tuple[Concept, ...]:
+    """Return deterministic PINN symptom concepts without external packages."""
+    return (
+        Concept(
+            name="boundary",
+            terms=(
+                "边界",
+                "边缘",
+                "端点",
+                "角点",
+                "约束边",
+                "几何约束",
+                "贴边",
+                "外边",
+                "boundary",
+                "bc",
+                "dirichlet",
+                "neumann",
+            ),
+        ),
+        Concept(
+            name="temporal",
+            terms=(
+                "瞬态",
+                "时间",
+                "后期",
+                "越往后",
+                "末端时间",
+                "长时间",
+                "时间推进",
+                "早期",
+                "后面时间",
+                "late time",
+                "causal",
+            ),
+        ),
+        Concept(
+            name="localized_sampling",
+            terms=(
+                "局部",
+                "小区域",
+                "热点",
+                "亮斑",
+                "尖锐区域",
+                "局部残差",
+                "采样覆盖",
+                "加密采样",
+                "adaptive",
+                "rar",
+                "rad",
+            ),
+        ),
+        Concept(
+            name="frequency",
+            terms=(
+                "振荡",
+                "起伏",
+                "波峰",
+                "窄峰",
+                "尖峰",
+                "相位",
+                "被抹平",
+                "平滑",
+                "高频",
+                "周期",
+                "fourier",
+                "siren",
+            ),
+        ),
+        Concept(
+            name="inverse",
+            terms=(
+                "反演",
+                "反问题",
+                "识别参数",
+                "识别系数",
+                "待识别",
+                "系数",
+                "参数漂",
+                "参数乱飘",
+                "可辨识",
+                "敏感性",
+                "物理范围",
+                "inverse",
+                "identifiability",
+            ),
+        ),
+        Concept(
+            name="conservation",
+            terms=(
+                "守恒",
+                "总质量",
+                "质量",
+                "能量",
+                "动量",
+                "通量",
+                "总量",
+                "积分总量",
+                "物理量",
+                "漂移",
+                "conservation",
+                "flux",
+            ),
+        ),
+        Concept(
+            name="high_order",
+            terms=(
+                "高阶",
+                "四阶",
+                "三阶",
+                "导数",
+                "自动微分",
+                "显存",
+                "计算图",
+                "弱形式",
+                "变分",
+                "vpinn",
+                "deep ritz",
+            ),
+        ),
+        Concept(
+            name="operator_learning",
+            terms=(
+                "大量不同参数",
+                "参数组合",
+                "每换一组参数",
+                "重复求解",
+                "快速得到结果",
+                "算子学习",
+                "跨参数",
+                "输入函数",
+                "deeponet",
+                "fno",
+                "pino",
+                "operator",
+            ),
+        ),
+        Concept(
+            name="underspecified",
+            terms=(
+                "效果不好",
+                "不理想",
+                "更先进",
+                "改进方法",
+                "不知道原因",
+                "没法判断",
+            ),
+        ),
+    )
+
+
+def concepts_for_text(text: str, concepts: tuple[Concept, ...]) -> tuple[str, ...]:
+    normalized_text = text.casefold()
+    matched = [
+        concept.name
+        for concept in concepts
+        if any(term.casefold() in normalized_text for term in concept.terms)
+    ]
+    return tuple(matched)
+
+
+def expanded_terms_for_concepts(
+    concept_names: tuple[str, ...],
+    concepts: tuple[Concept, ...],
+) -> tuple[str, ...]:
+    selected = set(concept_names)
+    terms: list[str] = []
+    seen: set[str] = set()
+    for concept in concepts:
+        if concept.name not in selected:
+            continue
+        for term in concept.terms:
+            normalized = term.casefold()
+            if normalized in seen:
+                continue
+            seen.add(normalized)
+            terms.append(term)
+    return tuple(terms)
