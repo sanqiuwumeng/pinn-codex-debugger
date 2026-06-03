@@ -1,0 +1,6 @@
+{
+  "file_count_excluding_pycache": 51,
+  "prompt": "PINN-2D phase-change benchmark: hard top/initial/Neumann constraints pass; full-field relative L2 is 5.824683e-02, mean absolute error is 12.2297 K, max absolute error is 279.465 K. Time-slice relative L2 is largest at t=5.0 with melted-area relative error 0.4667 and liquid-mask IoU 0.6818. Diagnose the dominant next debugging step without modifying or retraining the model.",
+  "read_only": true,
+  "source_root": "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D"
+}
