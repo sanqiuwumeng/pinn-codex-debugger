@@ -1,14 +1,16 @@
-# PINN Rules MCP Server And Hybrid Retrieval
+# MCP Server
 
-Local, read-only retrieval experiments for PINN symptom routing and handbook evidence extraction.
+This directory contains the runtime source for the PINN Hybrid RAG MCP service.
 
-## Runtime
+## Packages
 
-- Python standard library only
-- stdio transport
-- MCP protocol revision: `2025-11-25`
-- Source handbook: repository-root `PINN报错诊断与模块选择手册.md`
-- Hybrid backend: deterministic rules anchors + concept lexicon + token overlap + character 3-gram ranking
+- `rules_mcp`: stdio MCP server, symptom routing, direct handbook search, and
+  JSON-RPC handling.
+- `hybrid_rag`: deterministic hybrid retrieval over handbook sections.
+
+The composition root is `rules_mcp.__main__`. It constructs the handbook index,
+rules service, hybrid section index, and hybrid retrieval service explicitly,
+then injects them into the MCP server.
 
 ## Run
 
@@ -18,23 +20,15 @@ Set-Location 'E:\vibe coding\pinn-codex-debugger.worktrees\hybrid-rag\mcp-server
 & 'C:\Users\Mli\.conda\envs\pytorch2.3.1\python.exe' -m rules_mcp
 ```
 
-Each request and response is one UTF-8 JSON-RPC object per line.
-The client must send `initialize`, then `notifications/initialized`, before invoking tools.
-
-For the hybrid retrieval replay:
-
-```powershell
-Set-Location 'E:\vibe coding\pinn-codex-debugger.worktrees\hybrid-rag'
-& 'C:\Users\Mli\.conda\envs\pytorch2.3.1\python.exe' mcp-server\scripts\replay_hybrid_benchmark.py
-```
-
 ## Tools
 
-- `diagnose_pinn_symptom`: classify one observable symptom and return evidence gaps, required checks, candidate anchors, and traceable handbook matches.
-- `search_pinn_handbook`: retrieve exact-match handbook sections with source hash and line ranges.
+- `hybrid_search_pinn_handbook`: main hybrid-rag retrieval tool.
+- `diagnose_pinn_symptom`: deterministic symptom-family routing.
+- `search_pinn_handbook`: direct handbook section search.
 
-## Hybrid Retrieval
+## Notes
 
-The `hybrid_rag` package is not hidden inside the rules service. It receives the rules service and handbook index through explicit constructor arguments, then returns ranked sections with score parts, matched concepts, matched terms, matched anchors, source hash, and line ranges.
-
-The implementation does not use embeddings, network access, background services, global mutable state, or external packages.
+- Python standard library only.
+- No package installation required.
+- No network access required.
+- The server reads the repository-root handbook at startup.

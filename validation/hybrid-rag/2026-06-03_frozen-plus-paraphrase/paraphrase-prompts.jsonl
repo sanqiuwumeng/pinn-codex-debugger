@@ -1,9 +1,0 @@
-{"expected_family": "boundary handling", "expected_heading": "第十章 硬约束、距离函数与边界条件处理", "id": "boundary-paraphrase", "prompt": "靠近约束边的预测总是漏到外面，域内部误差反而还可以。先查哪一类证据？"}
-{"expected_family": "temporal propagation", "expected_heading": "第十六章 Causal PINN、时间分段与课程学习", "id": "temporal-paraphrase", "prompt": "开始几步预测还稳，推进到末端时间后误差一路放大。下一步应先补什么图？"}
-{"expected_family": "localized sampling difficulty", "expected_heading": "第十二章 自适应采样、RAR、RAD 与残差点更新", "id": "localized-paraphrase", "prompt": "误差地图只有一块亮斑一直消不掉，整体加点数没有明显收益。该怎么定位？"}
-{"expected_family": "high-frequency representation", "expected_heading": "第十三章 Fourier Features、SIREN与多尺度表达", "id": "frequency-paraphrase", "prompt": "尖窄波峰和周期起伏都被网络抹平了，峰位也偏。应该先验证什么？"}
-{"expected_family": "inverse identifiability", "expected_heading": "第二十三章 反问题、参数约束、贝叶斯PINN 与不确定性", "id": "inverse-paraphrase", "prompt": "状态量拟合很好，但识别系数一直飘，最后还跑到物理范围外。先看什么？"}
-{"expected_family": "physical structure preservation", "expected_heading": "第二十一章 守恒约束、结构保持与物理量监控", "id": "conservation-paraphrase", "prompt": "点值误差不大，可是积分总量和边界通量慢慢跑偏。下一步只改哪件事？"}
-{"expected_family": "high-order autodiff cost", "expected_heading": "第十九章 FO-PINN、VPINN、弱形式方法与 Deep Ritz", "id": "high-order-paraphrase", "prompt": "三四阶导数让自动微分图很大，单步很慢且曲线抖。继续堆内部点有用吗？"}
-{"expected_family": "operator learning task", "expected_heading": "第二十四章 DeepONet、FNO、PINO与物理信息算子学习", "id": "operator-paraphrase", "prompt": "跨参数族要反复算整条解函数，每个条件重训太慢，想快速泛化。问题本质是什么？"}
-{"expected_family": "underspecified", "expected_heading": "检查卡 1:症状是否明确", "id": "underspecified-paraphrase", "prompt": "结果就是不理想，别问细节，直接给一个更高级模型。"}

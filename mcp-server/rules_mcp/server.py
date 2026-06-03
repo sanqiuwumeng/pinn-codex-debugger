@@ -6,6 +6,9 @@ import json
 import sys
 from typing import Any, TextIO
 
+from hybrid_rag.models import HybridQuery
+from hybrid_rag.service import HybridRetrievalService
+
 from .models import DiagnosisRequest, SearchRequest
 from .service import RulesRetrievalService
 
@@ -15,8 +18,13 @@ PROTOCOL_VERSION = "2025-11-25"
 class StdioMcpServer:
     """Handle newline-delimited UTF-8 MCP JSON-RPC messages."""
 
-    def __init__(self, service: RulesRetrievalService) -> None:
+    def __init__(
+        self,
+        service: RulesRetrievalService,
+        hybrid_service: HybridRetrievalService | None = None,
+    ) -> None:
         self._service = service
+        self._hybrid_service = hybrid_service
         self._initialize_completed = False
         self._initialized = False
 
@@ -76,16 +84,17 @@ class StdioMcpServer:
                 "protocolVersion": negotiated_version,
                 "capabilities": {"tools": {}},
                 "serverInfo": {
-                    "name": "pinn-rules-retrieval",
-                    "title": "PINN Rules Retrieval",
+                    "name": "pinn-hybrid-rag",
+                    "title": "PINN Hybrid RAG",
                     "version": "0.1.0",
                     "description": (
-                        "Deterministic PINN symptom routing and handbook evidence extraction."
+                        "Deterministic PINN symptom routing and hybrid handbook retrieval."
                     ),
                 },
                 "instructions": (
-                    "Use diagnose_pinn_symptom before recommending a PINN module. "
-                    "Complete basic checks and change one logical point at a time."
+                    "Use hybrid_search_pinn_handbook or diagnose_pinn_symptom before "
+                    "recommending a PINN module. Complete basic checks and change one "
+                    "logical point at a time."
                 ),
             }
         if method == "ping":
@@ -115,6 +124,12 @@ class StdioMcpServer:
             if name == "diagnose_pinn_symptom":
                 payload = self._service.diagnose(
                     DiagnosisRequest.from_arguments(arguments)
+                ).to_dict()
+            elif name == "hybrid_search_pinn_handbook":
+                if self._hybrid_service is None:
+                    raise ValueError("hybrid retrieval service is not configured")
+                payload = self._hybrid_service.search(
+                    HybridQuery.from_arguments(arguments)
                 ).to_dict()
             elif name == "search_pinn_handbook":
                 matches = self._service.search(SearchRequest.from_arguments(arguments))
@@ -172,7 +187,57 @@ def tool_definitions() -> list[dict[str, Any]]:
         },
         "required": ["handbook_sha256", "matches"],
     }
+    hybrid_output = {
+        "type": "object",
+        "properties": {
+            "query": {"type": "string"},
+            "inferred_family": {"type": "string"},
+            "rules_family": {"type": "string"},
+            "matched_concepts": {"type": "array", "items": {"type": "string"}},
+            "source_sha256": {"type": "string"},
+            "backend": {"type": "string"},
+            "index_inputs": {"type": "array", "items": {"type": "string"}},
+            "ranked_sections": {"type": "array", "items": {"type": "object"}},
+        },
+        "required": [
+            "query",
+            "inferred_family",
+            "rules_family",
+            "matched_concepts",
+            "source_sha256",
+            "backend",
+            "index_inputs",
+            "ranked_sections",
+        ],
+    }
     return [
+        {
+            "name": "hybrid_search_pinn_handbook",
+            "title": "Hybrid Search PINN Handbook",
+            "description": (
+                "Rank PINN handbook sections using rules anchors, concept lexicons, "
+                "token overlap, and character 3-gram recall. Use this as the main "
+                "hybrid-rag product tool."
+            ),
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string"},
+                    "evidence": {"type": "array", "items": {"type": "string"}},
+                    "anchors": {"type": "array", "items": {"type": "string"}},
+                    "max_sections": {"type": "integer", "minimum": 1, "maximum": 10},
+                },
+                "required": ["query"],
+                "additionalProperties": False,
+            },
+            "outputSchema": hybrid_output,
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False,
+            },
+        },
         {
             "name": "diagnose_pinn_symptom",
             "title": "Diagnose PINN Symptom",

@@ -1,9 +1,0 @@
-{"id":"boundary-condition-failure","expected_family":"boundary handling","prompt":"我的 PINN 内域误差已经降下来，但边界附近始终偏差很大，边界点上的误差曲线也不稳定。请判断最应该先排查什么，并给出下一步实验。"}
-{"id":"late-time-divergence","expected_family":"temporal propagation","prompt":"我在训练一个瞬态问题。模型在开始的一小段时间预测还可以，但越往后偏差越明显，最后完全失真。请帮我安排排查顺序和下一步实验。"}
-{"id":"local-residual-hotspot","expected_family":"localized sampling difficulty","prompt":"全域平均误差看起来还能接受，但误差图里有一个很小的区域一直特别亮。把总采样点数均匀加倍后改善不明显。下一步应该怎么查？"}
-{"id":"high-frequency-smoothing","expected_family":"high-frequency representation","prompt":"真实解里有持续振荡和很窄的峰，但我训练出的曲线明显更平滑，峰值和相位都对不上。请判断先查什么，再建议一个实验。"}
-{"id":"inverse-parameter-drift","expected_family":"inverse identifiability","prompt":"我的反演任务中，状态量曲线已经拟合得不错，但待识别参数在训练过程中来回漂移，最后结果也超出合理范围。请给出诊断顺序。"}
-{"id":"conservation-drift","expected_family":"physical structure preservation","prompt":"预测场在采样点上的相对误差不大，但计算出来的总质量会随着时间持续偏移。请告诉我最先要补哪些证据，以及下一步只做什么改动。"}
-{"id":"high-order-pde-instability","expected_family":"high-order autodiff cost","prompt":"我处理的方程需要四阶导数，训练很慢，显存占用高，而且损失曲线抖动明显。继续增加内部点是否值得？请给出诊断和下一步。"}
-{"id":"repeated-parametric-solves","expected_family":"operator learning task","prompt":"我需要对大量不同参数组合快速得到结果，但现在每换一组参数都要重新训练一次，成本太高。请判断问题本质，并给一个优先实验。"}
-{"id":"underspecified-failure","expected_family":"underspecified","prompt":"我的 PINN 效果不理想。请直接帮我挑一个更先进的改进方法。"}

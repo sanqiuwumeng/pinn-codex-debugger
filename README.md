@@ -1,85 +1,71 @@
-# PINN Codex Debugger
+# PINN Hybrid RAG
 
-PINN Codex Debugger is a local experiment repository for building and evaluating
-assistant-side debugging support for Physics-Informed Neural Networks (PINNs).
+PINN Hybrid RAG is a local, deterministic MCP service for retrieving
+handbook-grounded evidence when debugging Physics-Informed Neural Networks
+(PINNs).
 
-The current branch, `exp/hybrid-rag`, contains three stages of work:
+It is packaged as a product-facing tool, not as an experiment archive. The
+repository contains only the runtime source, the source handbook, and the
+minimal configuration needed to run the service.
 
-- `skill-only`: a handbook-backed Codex skill baseline.
-- `rules-mcp`: a local stdio MCP server with deterministic symptom records and
-  handbook evidence extraction.
-- `hybrid-rag`: a deterministic hybrid retrieval layer that combines rules
-  anchors, concept lexicons, token overlap, and character 3-gram ranking.
+## What It Does
 
-The repository is designed for traceable diagnosis rather than black-box
-generation. Each retrieval result keeps source hashes, handbook headings, line
-ranges, score parts, matched concepts, matched terms, and matched anchors.
+- Routes observable PINN symptoms to a deterministic diagnosis family.
+- Retrieves traceable handbook sections with source hash and line ranges.
+- Adds hybrid recall through rules anchors, concept lexicons, token overlap, and
+  character 3-gram matching.
+- Returns structured MCP responses that can be consumed by Codex or another MCP
+  client.
 
-## Status
+The service is read-only. It does not modify PINN projects, start training jobs,
+install packages, call network APIs, or use background state.
 
-As of 2026-06-03, `hybrid-rag` has passed the project validation gates and has
-practical value as a PINN debugging assistant and candidate patch generator.
+## Product Scope
 
-It should not yet be treated as an automatically deployable final fixer. The
-best real-code experiment improved full-field L2 and interface metrics, but
-left a small MAE regression that should be checked with repeat runs before
-promoting the candidate patch into production code.
+This package is useful as a debugging assistant for:
 
-## Main Results
+- boundary-condition or initial-condition failure
+- late-time divergence
+- local residual hot spots
+- high-frequency smoothing
+- inverse-parameter drift
+- conservation drift
+- high-order PDE instability
+- repeated parametric solves
+- underspecified PINN failures
 
-| Evaluation | `skill-only` | `rules-mcp` | `hybrid-rag` |
-| --- | ---: | ---: | ---: |
-| Frozen nine-family blind suite | `86 / 90` | `90 / 90` through protocol adapter | `90 / 90` through protocol adapter |
-| Frozen family routing | n/a | `9 / 9` | `9 / 9` |
-| Paraphrase retrieval | n/a | n/a | `9 / 9` family and `9 / 9` expected top heading |
-| Real PINN-2D read-only diagnosis | `10 / 10` | `10 / 10` | `10 / 10` |
-| Real PINN-2D code-debug round | Full run, over-focused | Smoke-only, useful but incomplete | Best comparable full run |
-
-Best `hybrid-rag` code-debug result on the copied PINN-2D workspace:
-
-| Metric | Baseline | `hybrid-rag` |
-| --- | ---: | ---: |
-| Full L2 | `0.05825` | `0.04960` |
-| Full MAE K | `12.23` | `13.22` |
-| Full max K | `279.47` | `122.49` |
-| `t=5` L2 | `0.11869` | `0.08874` |
-| `t=5` melted-area error | `0.4667` | `0.0000` |
-| `t=5` IoU | `0.6818` | `1.0000` |
+It should be treated as an evidence and routing layer. Final code edits and
+training decisions should still go through normal engineering review.
 
 ## Repository Layout
 
 ```text
 .
 |-- PINN报错诊断与模块选择手册.md
-|-- mcp-server/
-|   |-- rules_mcp/
-|   |-- hybrid_rag/
-|   |-- scripts/
-|   `-- tests/
-|-- openspec/
-|   |-- specs/
-|   `-- changes/archive/
-|-- skills/
-`-- validation/
-    |-- blind-tests/
-    |-- generation-comparison/
-    |-- hybrid-rag/
-    |-- real-pinn-debug/
-    |-- code-debug-comparison/
-    `-- mixed-comparison/
+|-- README.md
+`-- mcp-server/
+    |-- README.md
+    |-- mcp-config.example.json
+    |-- hybrid_rag/
+    `-- rules_mcp/
 ```
 
-## Runtime
+## Requirements
 
-- Host: Windows 11
-- Shell: PowerShell
-- Python environment used during development: `pytorch2.3.1`
-- Resolved Python path:
-  `C:\Users\Mli\.conda\envs\pytorch2.3.1\python.exe`
-- External package installation for the MCP and hybrid retrieval stages: none
-- MCP transport: stdio JSON-RPC
+- Python 3.11 or compatible modern Python
+- No third-party Python packages required
+- UTF-8 capable terminal or MCP client
 
-## Run The MCP Server
+The original development environment used:
+
+```text
+C:\Users\Mli\.conda\envs\pytorch2.3.1\python.exe
+```
+
+You may replace that path with another Python interpreter in
+`mcp-server/mcp-config.example.json`.
+
+## Run Locally
 
 ```powershell
 $env:PYTHONUTF8='1'
@@ -87,56 +73,71 @@ Set-Location 'E:\vibe coding\pinn-codex-debugger.worktrees\hybrid-rag\mcp-server
 & 'C:\Users\Mli\.conda\envs\pytorch2.3.1\python.exe' -m rules_mcp
 ```
 
-The client must send `initialize`, then `notifications/initialized`, before
-invoking tools. Each request and response is one UTF-8 JSON-RPC object per line.
+Each MCP request and response is one UTF-8 JSON-RPC object per line. A client
+must send `initialize`, then `notifications/initialized`, before calling tools.
 
-Available tools:
+## MCP Tools
 
-- `diagnose_pinn_symptom`: classify an observable PINN symptom and return
-  evidence gaps, required checks, candidate anchors, and traceable handbook
-  matches.
-- `search_pinn_handbook`: retrieve handbook sections with source hash and line
-  ranges.
+### `hybrid_search_pinn_handbook`
 
-## Reproduce Key Checks
+Main product tool. It ranks handbook sections using deterministic hybrid
+retrieval.
 
-Run unit tests:
+Input:
 
-```powershell
-Set-Location 'E:\vibe coding\pinn-codex-debugger.worktrees\hybrid-rag'
-& 'C:\Users\Mli\.conda\envs\pytorch2.3.1\python.exe' -m unittest discover -s mcp-server\tests -t mcp-server
+```json
+{
+  "query": "t=5 early phase interface is wrong and local residual is high",
+  "evidence": ["boundary values are already correct"],
+  "anchors": [],
+  "max_sections": 5
+}
 ```
 
-Run the hybrid retrieval replay:
+Output includes:
 
-```powershell
-Set-Location 'E:\vibe coding\pinn-codex-debugger.worktrees\hybrid-rag'
-& 'C:\Users\Mli\.conda\envs\pytorch2.3.1\python.exe' mcp-server\scripts\replay_hybrid_benchmark.py
+- inferred diagnosis family
+- rules family
+- matched concepts
+- backend description
+- source handbook SHA256
+- ranked sections with score breakdowns, line ranges, matched terms, matched
+  concepts, matched anchors, and excerpts
+
+### `diagnose_pinn_symptom`
+
+Routes one symptom into a deterministic symptom family and returns required
+basic checks, evidence gaps, candidate anchors, and handbook matches.
+
+### `search_pinn_handbook`
+
+Performs direct handbook section search using explicit query terms or anchors.
+
+## Example MCP Config
+
+See:
+
+```text
+mcp-server/mcp-config.example.json
 ```
 
-Validate archived OpenSpec state:
+Update the Python path and `cwd` if you place the repository somewhere else.
 
-```powershell
-Set-Location 'E:\vibe coding\pinn-codex-debugger.worktrees\hybrid-rag'
-openspec validate --all --strict
+## Design Principles
+
+- explicit request and response models
+- no global mutable state
+- no network dependency
+- no embedding service dependency
+- deterministic output for the same handbook and query
+- source-grounded evidence with hashes and line ranges
+
+## Included Handbook
+
+The source handbook is:
+
+```text
+PINN报错诊断与模块选择手册.md
 ```
 
-## Important Evidence Files
-
-- `validation/hybrid-rag/2026-06-03_frozen-plus-paraphrase/summary.md`
-- `validation/mixed-comparison/2026-06-03_generation-and-real-pinn-report.md`
-- `validation/code-debug-comparison/2026-06-03_pinn-2d-code-debug/reports/summary.md`
-- `openspec/specs/hybrid-rag-retrieval/spec.md`
-- `openspec/specs/pinn-debug-generation-comparison/spec.md`
-- `openspec/specs/real-pinn-debug-comparison/spec.md`
-
-## Current Interpretation
-
-`hybrid-rag` is the strongest scheme in this repository because it keeps the
-deterministic traceability of `rules-mcp`, adds paraphrase-resilient retrieval,
-and performed best in the full real-code PINN-2D debugging comparison.
-
-The next engineering step is to promote the `hybrid-rag` 12.5% stratified
-focused-sampling patch into a clean review branch only after a separate
-apply/review step and at least one repeat run to check whether the observed MAE
-regression is stable or seed-specific.
+The service builds its section index from this file at startup.

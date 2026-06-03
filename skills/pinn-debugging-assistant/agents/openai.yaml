@@ -1,4 +1,0 @@
-interface:
-  display_name: "PINN Debugging Assistant"
-  short_description: "Diagnose PINN failures with handbook-grounded checks"
-  default_prompt: "Use $pinn-debugging-assistant to diagnose this PINN failure and recommend one next experiment."
