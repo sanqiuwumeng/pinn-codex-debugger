@@ -23,19 +23,19 @@
 
 ## 4. Prepare Rules-MCP Architecture Gate
 
-- [x] 4.1 Pause and obtain an explicit user reply of `Yes` before implementing the `rules-mcp` architecture.
-- [x] 4.2 Record the accepted sandbox and dependency plan before installing packages or changing any conda environment.
-- [x] 4.3 In `exp/rules-mcp`, integrate the reviewed baseline and frozen-benchmark commits without modifying the `exp/skill-only` worktree.
-- [x] 4.4 Review `git status` in `exp/rules-mcp` and back up every existing file before revision.
+- [ ] 4.1 Pause and obtain an explicit user reply of `Yes` before implementing the `rules-mcp` architecture.
+- [ ] 4.2 Record the accepted sandbox and dependency plan before installing packages or changing any conda environment.
+- [ ] 4.3 In `exp/rules-mcp`, integrate the reviewed baseline and frozen-benchmark commits without modifying the `exp/skill-only` worktree.
+- [ ] 4.4 Review `git status` in `exp/rules-mcp` and back up every existing file before revision.
 
 ## 5. Implement Rules-MCP Retrieval
 
-- [x] 5.1 Scaffold a physically isolated local MCP server with explicit request and response schemas for symptom records and evidence extraction.
-- [x] 5.2 Implement deterministic handbook heading-range extraction that preserves source hash, heading, anchor, and line-range provenance despite inline HTML table noise.
-- [x] 5.3 Implement lookup-table and explicit synonym-rule routing for symptom family, evidence gaps, required basic checks, and candidate handbook anchors.
-- [x] 5.4 Add unit tests proving repeated requests return identical structured evidence and that the nine frozen families route to traceable handbook evidence.
-- [x] 5.5 Replay the frozen blind benchmark, archive raw comparison evidence, and report differences from `skill-only`.
-- [x] 5.6 Run the closed-loop review `Debug -> First-Principles Refactoring -> Simplification`, validate the MCP experiment, confirm Git scope, and create an intentional `exp/rules-mcp` commit.
+- [ ] 5.1 Scaffold a physically isolated local MCP server with explicit request and response schemas for symptom records and evidence extraction.
+- [ ] 5.2 Implement deterministic handbook heading-range extraction that preserves source hash, heading, anchor, and line-range provenance despite inline HTML table noise.
+- [ ] 5.3 Implement lookup-table and explicit synonym-rule routing for symptom family, evidence gaps, required basic checks, and candidate handbook anchors.
+- [ ] 5.4 Add unit tests proving repeated requests return identical structured evidence and that the nine frozen families route to traceable handbook evidence.
+- [ ] 5.5 Replay the frozen blind benchmark, archive raw comparison evidence, and report differences from `skill-only`.
+- [ ] 5.6 Run the closed-loop review `Debug -> First-Principles Refactoring -> Simplification`, validate the MCP experiment, confirm Git scope, and create an intentional `exp/rules-mcp` commit.
 
 ## 6. Prepare Hybrid-RAG Architecture Gate
 

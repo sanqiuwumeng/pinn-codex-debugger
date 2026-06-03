@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "pinn-rules-retrieval": {
+      "command": "C:\\Users\\Mli\\.conda\\envs\\pytorch2.3.1\\python.exe",
+      "args": [
+        "-m",
+        "rules_mcp"
+      ],
+      "cwd": "E:\\vibe coding\\pinn-codex-debugger.worktrees\\rules-mcp\\mcp-server",
+      "env": {
+        "PYTHONUTF8": "1"
+      }
+    }
+  }
+}

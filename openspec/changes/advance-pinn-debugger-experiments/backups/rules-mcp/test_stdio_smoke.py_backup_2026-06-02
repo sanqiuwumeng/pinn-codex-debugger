@@ -1,0 +1,81 @@
+"""Subprocess smoke test for newline-delimited stdio MCP."""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+import unittest
+from pathlib import Path
+
+from rules_mcp.server import PROTOCOL_VERSION
+
+
+class StdioSmokeTests(unittest.TestCase):
+    def test_stdio_round_trip(self) -> None:
+        server_root = Path(__file__).resolve().parents[1]
+        env = dict(os.environ)
+        env["PYTHONUTF8"] = "1"
+        process = subprocess.Popen(
+            [sys.executable, "-m", "rules_mcp"],
+            cwd=server_root,
+            env=env,
+            text=True,
+            encoding="utf-8",
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        self.addCleanup(_stop_process, process)
+
+        requests = (
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": PROTOCOL_VERSION,
+                    "capabilities": {},
+                    "clientInfo": {"name": "smoke-client", "version": "0.1.0"},
+                },
+            },
+            {"jsonrpc": "2.0", "method": "notifications/initialized"},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}},
+            {
+                "jsonrpc": "2.0",
+                "id": 3,
+                "method": "tools/call",
+                "params": {
+                    "name": "diagnose_pinn_symptom",
+                    "arguments": {"symptom": "总质量随时间持续偏移。"},
+                },
+            },
+        )
+        assert process.stdin is not None
+        for request in requests:
+            process.stdin.write(json.dumps(request, ensure_ascii=False) + "\n")
+        process.stdin.flush()
+
+        assert process.stdout is not None
+        responses = [json.loads(process.stdout.readline()) for _ in range(3)]
+        self.assertEqual(responses[0]["result"]["protocolVersion"], PROTOCOL_VERSION)
+        self.assertEqual(len(responses[1]["result"]["tools"]), 2)
+        self.assertEqual(
+            responses[2]["result"]["structuredContent"]["family"],
+            "physical structure preservation",
+        )
+
+
+def _stop_process(process: subprocess.Popen[str]) -> None:
+    if process.stdin is not None:
+        process.stdin.close()
+    try:
+        process.wait(timeout=3)
+    except subprocess.TimeoutExpired:
+        process.terminate()
+        process.wait(timeout=3)
+
+
+if __name__ == "__main__":
+    unittest.main()
