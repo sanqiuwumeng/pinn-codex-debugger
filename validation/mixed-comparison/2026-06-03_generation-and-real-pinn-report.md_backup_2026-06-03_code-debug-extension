@@ -46,15 +46,3 @@ Improve retrieval adapters before running another expensive blind-thread round:
 1. Add explicit evidence-aware conflict handling to `rules-mcp` and `hybrid-rag`.
 2. Add real-case vocabulary around phase-interface error, liquid mask IoU, melted-area ratio, and time-slice metrics.
 3. Re-run the same mixed comparison to see whether retrieval records align with the agents' corrected diagnoses.
-
-## Code Debug Extension
-
-The follow-up code-debug round copied `skill_test\PINN-2D` into three ignored, isolated workspaces and authorized code edits plus retraining inside those copies only.
-
-| Scheme | Comparable level | Main change | Result |
-| --- | --- | --- | --- |
-| `skill-only` | Full | 33% focused sampling near early top-center melt region | Improved `t=5` melted-area error and IoU, but worsened full-field L2 and MAE. |
-| `rules-mcp` | Smoke only | Hard-constraint lifting profile from `eta**2` to `eta**4` | Improved smoke early-interface metrics, but had smoke late-time regression and no full comparable run. |
-| `hybrid-rag` | Full | 12.5% stratified focused sampling near early heating | Best full result: full L2 `0.04960`, `t=5` L2 `0.08874`, melted-area error `0`, IoU `1.0`. |
-
-Code-debug conclusion: `hybrid-rag` was the most effective practical coding assistant in this round. It found the same failure mode as `skill-only`, but used a lighter focused-sampling intervention and checked over-focusing tradeoffs through multiple full runs. The next candidate engineering patch is the `hybrid-rag` 12.5% stratified sampling change, pending a separate review/apply step and one repeat run to assess the MAE regression.

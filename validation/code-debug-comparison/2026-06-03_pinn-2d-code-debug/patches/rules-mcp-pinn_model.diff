@@ -1,0 +1,14 @@
+diff --git a/pinn_model.py_backup_2026-06-03 b/pinn_model.py
+index 0990a1f..67a892d 100644
+--- a/pinn_model.py_backup_2026-06-03
++++ b/pinn_model.py
+@@ -45,8 +45,9 @@ class HardConstraintPINN(nn.Module):
+         features = torch.cat([x_mode, y_mode, tau], dim=1)
+         raw = self.net(features)
+         delta = cfg.peak_temperature - cfg.initial_temperature
+-        base = cfg.initial_temperature + delta * heating_ramp_torch(t, cfg) * heating_shape_torch(x, cfg) * eta**2
+-        correction = delta * tau * (1.0 - eta**2) * raw
++        eta_profile = eta**4
++        base = cfg.initial_temperature + delta * heating_ramp_torch(t, cfg) * heating_shape_torch(x, cfg) * eta_profile
++        correction = delta * tau * (1.0 - eta_profile) * raw
+         return base + correction

@@ -1,0 +1,28 @@
+diff --git a/pinn_model.py_backup_2026-06-03 b/pinn_model.py
+index 0990a1f..f527cbb 100644
+--- a/pinn_model.py_backup_2026-06-03
++++ b/pinn_model.py
+@@ -52,10 +52,22 @@ class HardConstraintPINN(nn.Module):
+
+ def sample_fixed_collocation(cfg: ScenarioConfig, pinn_cfg: PinnConfig) -> dict[str, np.ndarray]:
+     rng = np.random.default_rng(cfg.seed)
++    focused_points = pinn_cfg.interior_points // 3
++    uniform_points = pinn_cfg.interior_points - focused_points
++    uniform = {
++        "x": rng.uniform(cfg.x_min, cfg.x_max, (uniform_points, 1)),
++        "y": rng.uniform(cfg.y_min, cfg.y_max, (uniform_points, 1)),
++        "t": rng.uniform(cfg.t_min, cfg.t_max, (uniform_points, 1)),
++    }
++    focused = {
++        "x": np.clip(rng.normal(0.0, 0.015, (focused_points, 1)), cfg.x_min, cfg.x_max),
++        "y": rng.uniform(0.7 * cfg.y_max, cfg.y_max, (focused_points, 1)),
++        "t": rng.uniform(max(cfg.ramp_time, cfg.t_min), min(10.0, cfg.t_max), (focused_points, 1)),
++    }
++    order = rng.permutation(pinn_cfg.interior_points)
+     return {
+-        "x": rng.uniform(cfg.x_min, cfg.x_max, (pinn_cfg.interior_points, 1)).astype(np.float32),
+-        "y": rng.uniform(cfg.y_min, cfg.y_max, (pinn_cfg.interior_points, 1)).astype(np.float32),
+-        "t": rng.uniform(cfg.t_min, cfg.t_max, (pinn_cfg.interior_points, 1)).astype(np.float32),
++        key: np.vstack((uniform[key], focused[key]))[order].astype(np.float32)
++        for key in ("x", "y", "t")
+     }
