@@ -4,20 +4,45 @@ This directory contains the runtime source for the PINN Hybrid RAG MCP service.
 
 ## Packages
 
+- `pinn_hybrid_rag`: product entrypoint and composition root.
 - `rules_mcp`: stdio MCP server, symptom routing, direct handbook search, and
-  JSON-RPC handling.
+  JSON-RPC handling. This is an internal support package.
 - `hybrid_rag`: deterministic hybrid retrieval over handbook sections.
 
-The composition root is `rules_mcp.__main__`. It constructs the handbook index,
-rules service, hybrid section index, and hybrid retrieval service explicitly,
-then injects them into the MCP server.
+The composition root is `pinn_hybrid_rag.__main__`. It constructs the handbook
+index, rules service, hybrid section index, and hybrid retrieval service
+explicitly, then injects them into the MCP server.
+
+The package includes a copy of the handbook under
+`pinn_hybrid_rag/resources/` for installed-package runs. Source-tree and editable
+runs prefer the repository-root handbook. Set `PINN_HYBRID_RAG_HANDBOOK` to
+force a specific handbook file.
+
+## Install
+
+```powershell
+Set-Location 'PATH_TO_REPOSITORY\mcp-server'
+python -m pip install -e .
+```
 
 ## Run
 
 ```powershell
 $env:PYTHONUTF8='1'
-Set-Location 'E:\vibe coding\pinn-codex-debugger.worktrees\hybrid-rag\mcp-server'
-& 'C:\Users\Mli\.conda\envs\pytorch2.3.1\python.exe' -m rules_mcp
+Set-Location 'PATH_TO_REPOSITORY\mcp-server'
+python -m pinn_hybrid_rag
+```
+
+After editable installation, you can also run:
+
+```powershell
+pinn-hybrid-rag
+```
+
+## Smoke Test
+
+```powershell
+python -B smoke_test.py
 ```
 
 ## Tools
@@ -31,4 +56,4 @@ Set-Location 'E:\vibe coding\pinn-codex-debugger.worktrees\hybrid-rag\mcp-server
 - Python standard library only.
 - No package installation required.
 - No network access required.
-- The server reads the repository-root handbook at startup.
+- The server reads the selected handbook at startup and reports its SHA256.

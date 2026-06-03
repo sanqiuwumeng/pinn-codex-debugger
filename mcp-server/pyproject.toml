@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pinn-hybrid-rag"
+version = "0.1.0"
+description = "Local deterministic MCP service for PINN handbook hybrid retrieval."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+pinn-hybrid-rag = "pinn_hybrid_rag.__main__:main"
+
+[tool.setuptools]
+packages = ["pinn_hybrid_rag", "hybrid_rag", "rules_mcp"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+pinn_hybrid_rag = ["resources/*.md"]

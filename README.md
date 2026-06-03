@@ -46,6 +46,9 @@ training decisions should still go through normal engineering review.
 `-- mcp-server/
     |-- README.md
     |-- mcp-config.example.json
+    |-- pyproject.toml
+    |-- pinn_hybrid_rag/
+    |   `-- resources/
     |-- hybrid_rag/
     `-- rules_mcp/
 ```
@@ -56,25 +59,42 @@ training decisions should still go through normal engineering review.
 - No third-party Python packages required
 - UTF-8 capable terminal or MCP client
 
-The original development environment used:
+Use any Python 3.11+ interpreter on the target machine. If your MCP client uses
+`mcp-server/mcp-config.example.json`, replace `PATH_TO_REPOSITORY` with the
+local checkout path.
 
-```text
-C:\Users\Mli\.conda\envs\pytorch2.3.1\python.exe
-```
+## Install
 
-You may replace that path with another Python interpreter in
-`mcp-server/mcp-config.example.json`.
-
-## Run Locally
+For source-tree use without installing:
 
 ```powershell
 $env:PYTHONUTF8='1'
-Set-Location 'E:\vibe coding\pinn-codex-debugger.worktrees\hybrid-rag\mcp-server'
-& 'C:\Users\Mli\.conda\envs\pytorch2.3.1\python.exe' -m rules_mcp
+Set-Location 'PATH_TO_REPOSITORY\mcp-server'
+python -m pinn_hybrid_rag
+```
+
+For editable installation:
+
+```powershell
+Set-Location 'PATH_TO_REPOSITORY\mcp-server'
+python -m pip install -e .
+```
+
+After editable installation, start the MCP server with:
+
+```powershell
+pinn-hybrid-rag
 ```
 
 Each MCP request and response is one UTF-8 JSON-RPC object per line. A client
 must send `initialize`, then `notifications/initialized`, before calling tools.
+
+## Smoke Test
+
+```powershell
+Set-Location 'PATH_TO_REPOSITORY\mcp-server'
+python -B smoke_test.py
+```
 
 ## MCP Tools
 
@@ -123,6 +143,15 @@ mcp-server/mcp-config.example.json
 
 Update the Python path and `cwd` if you place the repository somewhere else.
 
+The recommended module entrypoint is:
+
+```text
+python -m pinn_hybrid_rag
+```
+
+The legacy module entrypoint `python -m rules_mcp` remains as a thin forwarder,
+but new MCP clients should use `pinn_hybrid_rag`.
+
 ## Design Principles
 
 - explicit request and response models
@@ -140,4 +169,14 @@ The source handbook is:
 PINN报错诊断与模块选择手册.md
 ```
 
-The service builds its section index from this file at startup.
+For source-tree and editable runs, the service reads the repository-root
+handbook. For package installs, the same handbook is also included as package
+data under `pinn_hybrid_rag/resources/`.
+
+To force a specific handbook path, set:
+
+```powershell
+$env:PINN_HYBRID_RAG_HANDBOOK='C:\path\to\PINN报错诊断与模块选择手册.md'
+```
+
+The service builds its section index from the selected handbook at startup.

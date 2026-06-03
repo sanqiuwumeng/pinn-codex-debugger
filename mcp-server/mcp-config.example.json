@@ -1,12 +1,12 @@
 {
   "mcpServers": {
     "pinn-hybrid-rag": {
-      "command": "C:\\Users\\Mli\\.conda\\envs\\pytorch2.3.1\\python.exe",
+      "command": "python",
       "args": [
         "-m",
-        "rules_mcp"
+        "pinn_hybrid_rag"
       ],
-      "cwd": "E:\\vibe coding\\pinn-codex-debugger.worktrees\\hybrid-rag\\mcp-server",
+      "cwd": "PATH_TO_REPOSITORY\\mcp-server",
       "env": {
         "PYTHONUTF8": "1"
       }
