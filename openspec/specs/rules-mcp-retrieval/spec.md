@@ -1,0 +1,46 @@
+# rules-mcp-retrieval Specification
+
+## Purpose
+TBD - created by archiving change advance-pinn-debugger-experiments. Update Purpose after archive.
+## Requirements
+### Requirement: Architectural implementation requires explicit approval
+The `rules-mcp` experiment MUST NOT be implemented until the user explicitly replies `Yes` to approve the architectural change.
+
+#### Scenario: Rules MCP implementation is requested without approval
+- **WHEN** the project reaches the `rules-mcp` implementation stage without an explicit `Yes`
+- **THEN** implementation pauses before creating or modifying architectural files
+
+### Requirement: Rules retrieval is physically isolated
+The `rules-mcp` experiment SHALL place its functional modules inside the existing `exp/rules-mcp` worktree and SHALL exchange data only through explicit request and response objects.
+
+#### Scenario: Retrieval request is processed
+- **WHEN** a client submits an observable symptom and optional evidence
+- **THEN** the MCP server processes the explicit request without global variables, singletons, or implicit dependencies
+
+### Requirement: Symptom records are structured
+The MCP server SHALL return a structured symptom record containing the observable symptom family, evidence received, evidence gaps, required basic checks, candidate handbook anchors, and extraction provenance.
+
+#### Scenario: Boundary symptom is classified
+- **WHEN** a request reports persistent boundary-condition error
+- **THEN** the response identifies boundary handling, returns relevant checks, and records the matched handbook anchors
+
+### Requirement: Evidence extraction is deterministic
+The `rules-mcp` experiment SHALL use deterministic handbook parsing, heading ranges, lookup tables, and explicit keyword or synonym rules. It MUST NOT use embeddings or semantic vector search.
+
+#### Scenario: Same request is repeated
+- **WHEN** the same handbook version and request object are processed twice
+- **THEN** the extracted evidence record is identical
+
+### Requirement: Handbook evidence remains traceable
+Each extracted evidence item SHALL include the source handbook hash and a heading, anchor, or line range that can be verified directly.
+
+#### Scenario: Evidence is returned
+- **WHEN** the MCP server returns a handbook match
+- **THEN** the response identifies the exact source location and provenance hash
+
+### Requirement: Rules MCP is compared against the frozen benchmark
+The `rules-mcp` experiment SHALL replay the canonical blind suite and report its results against the `skill-only` baseline.
+
+#### Scenario: Rules MCP evaluation completes
+- **WHEN** the deterministic retrieval experiment finishes validation
+- **THEN** its report uses the frozen prompts and rubric and records precision, extraction, and response-quality differences
