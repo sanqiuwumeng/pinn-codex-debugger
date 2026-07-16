@@ -11,7 +11,9 @@ from .enums import (
     AggregationPolicy,
     ApprovalDecision,
     ApprovalKind,
+    ArtifactCollectionStatus,
     AuditStatus,
+    BackendRunPhase,
     ClaimScope,
     DecisionStatus,
     EvidenceLevel,
@@ -662,6 +664,17 @@ class ExperimentCompletenessReport(VersionedModel):
         return self
 
 
+class ApprovalRecord(VersionedModel):
+    approval_id: Identifier
+    workflow_id: Identifier
+    kind: ApprovalKind
+    decision: ApprovalDecision
+    approved_by: Identifier
+    approved_at: datetime
+    scope: ShortText
+    evidence_refs: tuple[ArtifactRef, ...] = ()
+
+
 class RunManifest(VersionedModel):
     run_id: Identifier
     workflow_id: Identifier
@@ -678,12 +691,169 @@ class RunManifest(VersionedModel):
     rollback_plan: ShortText
 
 
+class ExecutionRequest(VersionedModel):
+    request_id: Identifier
+    manifest: RunManifest
+    approval: ApprovalRecord
+
+
+class BackendRunRef(VersionedModel):
+    backend_id: Identifier
+    run_id: Identifier
+    idempotency_key: Identifier
+    reference: ShortText
+
+
+class PreparedRun(VersionedModel):
+    request: ExecutionRequest
+    backend_ref: BackendRunRef
+    staging_root: ShortText
+    prepared_at: datetime
+    launch_metadata: dict[str, JsonValue] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def backend_reference_matches_manifest(self) -> Self:
+        manifest = self.request.manifest
+        if self.backend_ref.run_id != manifest.run_id:
+            raise ValueError("prepared backend reference run_id must match manifest")
+        if self.backend_ref.idempotency_key != manifest.idempotency_key:
+            raise ValueError(
+                "prepared backend reference idempotency_key must match manifest"
+            )
+        return self
+
+
+class LogCursor(VersionedModel):
+    stdout_offset: int = Field(default=0, ge=0)
+    stderr_offset: int = Field(default=0, ge=0)
+    observed_at: datetime
+
+
+class BackendRunStatus(VersionedModel):
+    backend_ref: BackendRunRef
+    phase: BackendRunPhase
+    observed_at: datetime
+    process_id: int | None = Field(default=None, ge=1)
+    process_create_time: FiniteFloat | None = None
+    exit_code: int | None = None
+    heartbeat_at: datetime | None = None
+    log_cursor: LogCursor | None = None
+    produced_artifacts: tuple[str, ...] = ()
+    checks: dict[str, bool] = Field(default_factory=dict)
+    detail: str | None = Field(default=None, max_length=4096)
+
+    @model_validator(mode="after")
+    def completed_phase_has_success_evidence(self) -> Self:
+        if self.phase is BackendRunPhase.COMPLETED:
+            if self.exit_code != 0:
+                raise ValueError("completed backend status requires exit_code 0")
+            if not self.checks or not all(self.checks.values()):
+                raise ValueError("completed backend status requires passing checks")
+        return self
+
+
+class RunCancellationRequest(VersionedModel):
+    run_id: Identifier
+    workflow_id: Identifier
+    requested_at: datetime
+    reason: ShortText
+    approval: ApprovalRecord
+
+    @model_validator(mode="after")
+    def cancellation_has_scoped_human_approval(self) -> Self:
+        if self.approval.kind is not ApprovalKind.RUN_CANCELLATION:
+            raise ValueError("run cancellation requires RUN_CANCELLATION approval")
+        if self.approval.decision is not ApprovalDecision.APPROVED:
+            raise ValueError("run cancellation requires an approved decision")
+        if self.approval.workflow_id != self.workflow_id:
+            raise ValueError("cancellation approval workflow_id must match request")
+        if self.approval.scope != f"run:{self.run_id}:cancel":
+            raise ValueError("cancellation approval scope must match run_id")
+        return self
+
+
+class ArtifactCollectionSpec(VersionedModel):
+    run_id: Identifier
+    backend_ref: BackendRunRef
+    destination_root: ShortText
+    required_artifacts: tuple[str, ...] = Field(min_length=1)
+    overwrite_existing: Literal[False] = False
+
+    @model_validator(mode="after")
+    def collection_reference_matches_run(self) -> Self:
+        if self.backend_ref.run_id != self.run_id:
+            raise ValueError("collection backend reference run_id must match spec")
+        return self
+
+
+class ArtifactCollectionReport(VersionedModel):
+    run_id: Identifier
+    status: ArtifactCollectionStatus
+    artifact_refs: tuple[ArtifactRef, ...] = ()
+    source_manifest_ref: ArtifactRef | None = None
+    destination_manifest_ref: ArtifactRef | None = None
+    findings: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def complete_collection_has_two_manifests(self) -> Self:
+        if self.status is ArtifactCollectionStatus.COMPLETE:
+            if not self.artifact_refs:
+                raise ValueError("complete collection requires collected artifacts")
+            manifests = (
+                self.source_manifest_ref,
+                self.destination_manifest_ref,
+            )
+            if any(manifest is None for manifest in manifests):
+                raise ValueError(
+                    "complete collection requires source and destination manifests"
+                )
+        return self
+
+
 class RunSubmission(VersionedModel):
     run_id: Identifier
     idempotency_key: Identifier
     status: RunSubmissionStatus
-    backend_ref: str | None = Field(default=None, max_length=4096)
+    prepared_run: PreparedRun | None = None
+    backend_ref: BackendRunRef | None = None
+    last_backend_status: BackendRunStatus | None = None
+    collection_report: ArtifactCollectionReport | None = None
     duplicate: bool = False
+
+    @model_validator(mode="after")
+    def lifecycle_state_has_required_references(self) -> Self:
+        prepared_states = (
+            RunSubmissionStatus.PREPARED,
+            RunSubmissionStatus.RUNNING,
+            RunSubmissionStatus.RUNNING_UNKNOWN,
+            RunSubmissionStatus.CANCELLING,
+            RunSubmissionStatus.CANCELLED,
+            RunSubmissionStatus.COLLECTING,
+            RunSubmissionStatus.COMPLETED,
+        )
+        backend_states = tuple(
+            status
+            for status in prepared_states
+            if status is not RunSubmissionStatus.PREPARED
+        )
+        if self.status in prepared_states and self.prepared_run is None:
+            raise ValueError("prepared lifecycle state requires PreparedRun")
+        if self.status in backend_states and self.backend_ref is None:
+            raise ValueError("backend lifecycle state requires BackendRunRef")
+        terminal_phases = {
+            RunSubmissionStatus.CANCELLED: BackendRunPhase.CANCELLED,
+            RunSubmissionStatus.COMPLETED: BackendRunPhase.COMPLETED,
+        }
+        expected_phase = terminal_phases.get(self.status)
+        if expected_phase is not None:
+            if (
+                self.last_backend_status is None
+                or self.last_backend_status.phase is not expected_phase
+            ):
+                raise ValueError(
+                    "terminal submission requires matching backend status evidence"
+                )
+        return self
 
 
 class RunEvent(VersionedModel):
@@ -759,17 +929,6 @@ class DecisionRecord(VersionedModel):
     falsification_condition: str | None = Field(default=None, max_length=4096)
     rollback_plan: str | None = Field(default=None, max_length=4096)
     reasons: tuple[str, ...] = ()
-
-
-class ApprovalRecord(VersionedModel):
-    approval_id: Identifier
-    workflow_id: Identifier
-    kind: ApprovalKind
-    decision: ApprovalDecision
-    approved_by: Identifier
-    approved_at: datetime
-    scope: ShortText
-    evidence_refs: tuple[ArtifactRef, ...] = ()
 
 
 class KnowledgeCandidate(VersionedModel):

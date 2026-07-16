@@ -9,11 +9,11 @@
 
 ## 2. Production Execution Contracts
 
-- [ ] 2.1 Replace the launch-only `RunnerBackend` with explicit prepare, launch, reconcile, cancel and collect contracts; migrate callers without a compatibility layer.
-- [ ] 2.2 Extend the run registry for prepared, running, uncertain, cancelling, cancelled, collecting, completed and failed lifecycle states.
-- [ ] 2.3 Preserve manifest-first idempotency and require reconciliation before retrying any uncertain launch.
-- [ ] 2.4 Add typed status, cancellation, log-cursor and artifact-collection contracts with schema-version tests.
-- [ ] 2.5 Prove the execution layer receives every path, environment value and approval explicitly and uses no hidden working-directory or global state.
+- [x] 2.1 Replace the launch-only `RunnerBackend` with explicit prepare, launch, reconcile, cancel and collect contracts; migrate callers without a compatibility layer.
+- [x] 2.2 Extend the run registry for prepared, running, uncertain, cancelling, cancelled, collecting, completed and failed lifecycle states.
+- [x] 2.3 Preserve manifest-first idempotency and require reconciliation before retrying any uncertain launch.
+- [x] 2.4 Add typed status, cancellation, log-cursor and artifact-collection contracts with schema-version tests.
+- [x] 2.5 Prove the execution layer receives every path, environment value and approval explicitly and uses no hidden working-directory or global state.
 
 ## 3. Local Process Backend
 

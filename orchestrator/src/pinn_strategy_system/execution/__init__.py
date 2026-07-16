@@ -8,10 +8,12 @@ from .process_monitor import (
 )
 from .retrieval import McpReadOnlyRetrievalProvider, RetrievalProvider
 from .runner import (
+    ExecutionBackend,
     IdempotencyConflictError,
     ManifestFirstRunner,
     RunLaunchUncertainError,
-    RunnerBackend,
+    RunPreparationError,
+    RunRegistrySchemaError,
     SQLiteRunRegistry,
 )
 
@@ -19,6 +21,7 @@ __all__ = [
     "FieldData",
     "ApprovedProcessIdentity",
     "ApprovedProcessSampler",
+    "ExecutionBackend",
     "IdempotencyConflictError",
     "ManifestFirstRunner",
     "McpReadOnlyRetrievalProvider",
@@ -26,6 +29,7 @@ __all__ = [
     "ProcessUnavailableError",
     "RetrievalProvider",
     "RunLaunchUncertainError",
-    "RunnerBackend",
+    "RunPreparationError",
+    "RunRegistrySchemaError",
     "SQLiteRunRegistry",
 ]

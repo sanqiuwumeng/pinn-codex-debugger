@@ -39,12 +39,18 @@ from pinn_strategy_system.contracts import (  # noqa: E402
     ApprovalDecision,
     ApprovalKind,
     ApprovalRecord,
+    ArtifactCollectionReport,
+    ArtifactCollectionSpec,
     ArtifactRef,
     AuditStatus,
+    BackendRunPhase,
+    BackendRunRef,
+    BackendRunStatus,
     BudgetSpec,
     DecisionRecord,
     DecisionStatus,
     ExperimentDraft,
+    ExecutionRequest,
     InterventionChange,
     MetricContract,
     MetricEvidenceBasis,
@@ -52,9 +58,11 @@ from pinn_strategy_system.contracts import (  # noqa: E402
     MonitorOutcome,
     MonitoringPolicy,
     PhysicalAuditReport,
+    PreparedRun,
     ResultStatus,
     RunEvent,
     RunEventType,
+    RunCancellationRequest,
     RunManifest,
     RunValidationInput,
     SourceRef,
@@ -66,8 +74,8 @@ from pinn_strategy_system.contracts import (  # noqa: E402
 from pinn_strategy_system.execution import (  # noqa: E402
     ApprovedProcessIdentity,
     ApprovedProcessSampler,
+    ExecutionBackend,
     ManifestFirstRunner,
-    RunnerBackend,
     SQLiteRunRegistry,
 )
 from pinn_strategy_system.orchestration import build_phase0_graph  # noqa: E402
@@ -182,15 +190,38 @@ def _environment_manifest(training_python: Path) -> dict[str, Any]:
     return payload
 
 
-class LocalObservedBackend(RunnerBackend):
+def _backend_phase(exit_code: int | None) -> BackendRunPhase:
+    if exit_code is None:
+        return BackendRunPhase.RUNNING
+    terminal_phases = {0: BackendRunPhase.COMPLETED}
+    return terminal_phases.get(exit_code, BackendRunPhase.FAILED)
+
+
+class LocalObservedBackend(ExecutionBackend):
     """Case-local backend; the universal runner remains backend-agnostic."""
 
     def __init__(self, log_root: Path) -> None:
         self._log_root = log_root
         self.processes: dict[str, subprocess.Popen[bytes]] = {}
         self._streams: dict[str, tuple[Any, Any]] = {}
+        self._create_times: dict[str, float] = {}
 
-    def launch(self, manifest: RunManifest) -> str:
+    def prepare(self, request: ExecutionRequest) -> PreparedRun:
+        manifest = request.manifest
+        return PreparedRun(
+            request=request,
+            backend_ref=BackendRunRef(
+                backend_id="validation-local-observed",
+                run_id=manifest.run_id,
+                idempotency_key=manifest.idempotency_key,
+                reference=f"validation-local://{manifest.run_id}",
+            ),
+            staging_root=manifest.working_directory,
+            prepared_at=datetime.now(UTC),
+        )
+
+    def launch(self, prepared_run: PreparedRun) -> BackendRunRef:
+        manifest = prepared_run.request.manifest
         stdout_path = self._log_root / f"{manifest.run_id}.stdout.log"
         stderr_path = self._log_root / f"{manifest.run_id}.stderr.log"
         stdout_stream = stdout_path.open("xb")
@@ -210,7 +241,46 @@ class LocalObservedBackend(RunnerBackend):
             raise
         self.processes[manifest.run_id] = process
         self._streams[manifest.run_id] = (stdout_stream, stderr_stream)
-        return f"local-process://{process.pid}"
+        self._create_times[manifest.run_id] = psutil.Process(process.pid).create_time()
+        return prepared_run.backend_ref
+
+    def reconcile(self, backend_ref: BackendRunRef) -> BackendRunStatus:
+        process = self.processes[backend_ref.run_id]
+        exit_code = process.poll()
+        return BackendRunStatus(
+            backend_ref=backend_ref,
+            phase=_backend_phase(exit_code),
+            observed_at=datetime.now(UTC),
+            process_id=process.pid,
+            process_create_time=self._create_times[backend_ref.run_id],
+            exit_code=exit_code,
+            checks={"process_identity": True},
+        )
+
+    def cancel(
+        self,
+        backend_ref: BackendRunRef,
+        request: RunCancellationRequest,
+    ) -> BackendRunStatus:
+        process = self.processes[backend_ref.run_id]
+        process.terminate()
+        return BackendRunStatus(
+            backend_ref=backend_ref,
+            phase=BackendRunPhase.CANCELLING,
+            observed_at=datetime.now(UTC),
+            process_id=process.pid,
+            process_create_time=self._create_times[backend_ref.run_id],
+            checks={"approval": request.approval.approval_id != ""},
+        )
+
+    def collect(
+        self,
+        backend_ref: BackendRunRef,
+        spec: ArtifactCollectionSpec,
+    ) -> ArtifactCollectionReport:
+        raise NotImplementedError(
+            "validation adapter artifact collection is replaced in Phase 2 task 3.5"
+        )
 
     def wait(self, run_id: str) -> int:
         process = self.processes[run_id]
@@ -221,13 +291,38 @@ class LocalObservedBackend(RunnerBackend):
         return return_code
 
 
-class ForbiddenReplayBackend(RunnerBackend):
+class ForbiddenReplayBackend(ExecutionBackend):
     def __init__(self) -> None:
         self.launch_count = 0
 
-    def launch(self, manifest: RunManifest) -> str:
+    def prepare(self, request: ExecutionRequest) -> PreparedRun:
         self.launch_count += 1
-        raise AssertionError(f"replay attempted to relaunch {manifest.run_id}")
+        raise AssertionError(
+            f"replay attempted to prepare {request.manifest.run_id}"
+        )
+
+    def launch(self, prepared_run: PreparedRun) -> BackendRunRef:
+        self.launch_count += 1
+        raise AssertionError(
+            f"replay attempted to relaunch {prepared_run.request.manifest.run_id}"
+        )
+
+    def reconcile(self, backend_ref: BackendRunRef) -> BackendRunStatus:
+        raise AssertionError(f"replay attempted to reconcile {backend_ref.run_id}")
+
+    def cancel(
+        self,
+        backend_ref: BackendRunRef,
+        request: RunCancellationRequest,
+    ) -> BackendRunStatus:
+        raise AssertionError(f"replay attempted to cancel {backend_ref.run_id}")
+
+    def collect(
+        self,
+        backend_ref: BackendRunRef,
+        spec: ArtifactCollectionSpec,
+    ) -> ArtifactCollectionReport:
+        raise AssertionError(f"replay attempted to collect {backend_ref.run_id}")
 
 
 @dataclass(frozen=True)
@@ -303,6 +398,7 @@ def _run_one(
         sample_index += 1
         time.sleep(0.5)
     exit_code = backend.wait(manifest.run_id)
+    submission = runner.reconcile(manifest.idempotency_key)
 
     artifacts: dict[str, ArtifactRef] = {}
     for relative in EXPECTED_OUTPUTS:
