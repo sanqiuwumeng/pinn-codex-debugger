@@ -1,6 +1,6 @@
 # Thermal Focused-Collocation Multi-Seed Qualification
 
-Date: 2026-07-16  
+Date: 2026-07-16
 Status: `PASS_WITH_ONE_SCIENTIFIC_REJECTION_RETAINED`
 
 ## Frozen design
@@ -71,11 +71,11 @@ crossed the independently governed MAE absolute guardrail.
 Large artifacts remain in the ignored artifact area and are addressed by
 SHA-256:
 
-- Aggregate: `validation/phase2/results/thermal-multiseed-20260716/thermal-multiseed-aggregate.json`  
+- Aggregate: `validation/phase2/results/thermal-multiseed-20260716/thermal-multiseed-aggregate.json`
   `a8ce657e6efb3e2f4e958c461acc369bb3d8dead1d9d107e9c2c1f30330ae4fd`
-- Seed 7 qualified attempt: `validation/phase2/results/thermal-multiseed-20260716/seed-7-attempt2/seed-execution-report.json`  
+- Seed 7 qualified attempt: `validation/phase2/results/thermal-multiseed-20260716/seed-7-attempt2/seed-execution-report.json`
   `e45aa9be8273bf6942537b2d2441bb0858618807688e82e25236d34db009609f`
-- Seed 42 prior full evidence: `validation/full/results/pinn2d-focused-full-repro-20260716/full-execution-report.json`  
+- Seed 42 prior full evidence: `validation/full/results/pinn2d-focused-full-repro-20260716/full-execution-report.json`
   `02c3455ca31410808a5705fe3298b422067fc7ffef674ddb155ddf10ffe474a0`
-- Seed 2026: `validation/phase2/results/thermal-multiseed-20260716/seed-2026-attempt1/seed-execution-report.json`  
+- Seed 2026: `validation/phase2/results/thermal-multiseed-20260716/seed-2026-attempt1/seed-execution-report.json`
   `e716a1099fea253e877bdb2342ee952748903bf7db7e3411f94b70da65988111`
