@@ -704,6 +704,13 @@ class BackendRunRef(VersionedModel):
     reference: ShortText
 
 
+class SshConnectionProfile(VersionedModel):
+    profile_id: Identifier
+    host_key_fingerprint_sha256: Sha256
+    identity_key_fingerprint_sha256: Sha256
+    transport: Literal["system-openssh"] = "system-openssh"
+
+
 class PreparedRun(VersionedModel):
     request: ExecutionRequest
     backend_ref: BackendRunRef

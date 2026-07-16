@@ -1,5 +1,6 @@
 """Read-only execution services and explicit external adapters."""
 
+from .autodl_ssh import AutoDlSshBackendConfig, AutoDlSshRunnerBackend
 from .local_process import LocalProcessBackendConfig, LocalProcessRunnerBackend
 from .prediction import FieldData, PredictionAnalyzer
 from .process_monitor import (
@@ -17,11 +18,20 @@ from .runner import (
     RunRegistrySchemaError,
     SQLiteRunRegistry,
 )
+from .ssh_transport import (
+    AutoDlTransport,
+    SshTransportError,
+    SystemOpenSshRuntime,
+    SystemOpenSshTransport,
+)
 
 __all__ = [
     "FieldData",
     "ApprovedProcessIdentity",
     "ApprovedProcessSampler",
+    "AutoDlSshBackendConfig",
+    "AutoDlSshRunnerBackend",
+    "AutoDlTransport",
     "ExecutionBackend",
     "IdempotencyConflictError",
     "LocalProcessBackendConfig",
@@ -35,4 +45,7 @@ __all__ = [
     "RunPreparationError",
     "RunRegistrySchemaError",
     "SQLiteRunRegistry",
+    "SshTransportError",
+    "SystemOpenSshRuntime",
+    "SystemOpenSshTransport",
 ]

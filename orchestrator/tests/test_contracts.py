@@ -43,6 +43,7 @@ from pinn_strategy_system.contracts import (  # noqa: E402
     RunEvent,
     RunEventType,
     RunManifest,
+    SshConnectionProfile,
     SourceRef,
     SourceSnapshot,
     UnitSystemContract,
@@ -132,6 +133,21 @@ class ContractTests(unittest.TestCase):
                 "time": True,
                 "normalization": True,
             },
+        )
+
+    def test_ssh_connection_profile_persists_fingerprints_only(self) -> None:
+        profile = SshConnectionProfile(
+            profile_id="autodl-a",
+            host_key_fingerprint_sha256="b" * 64,
+            identity_key_fingerprint_sha256="c" * 64,
+        )
+
+        payload = profile.model_dump(mode="json")
+
+        self.assertEqual(payload["transport"], "system-openssh")
+        self.assertFalse(
+            {"hostname", "username", "port", "password", "identity_file"}
+            & payload.keys()
         )
 
     def test_all_domain_contracts_round_trip_as_json(self) -> None:

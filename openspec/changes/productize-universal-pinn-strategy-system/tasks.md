@@ -25,10 +25,10 @@
 
 ## 4. AutoDL SSH Backend
 
-- [ ] 4.1 Implement an explicit connection-profile contract that persists only an alias and host/key fingerprints.
-- [ ] 4.2 Implement content-addressed staging, remote path confinement, pre-write backups and remote SHA-256 verification using system OpenSSH.
-- [ ] 4.3 Implement a durable remote launcher with PID, process identity, heartbeat, status, stdout and stderr artifacts.
-- [ ] 4.4 Implement disconnect-safe reconcile, approved cancel and manifest-first result collection with partial-transfer quarantine.
+- [x] 4.1 Implement an explicit connection-profile contract that persists only an alias and host/key fingerprints.
+- [x] 4.2 Implement content-addressed staging, remote path confinement, pre-write backups and remote SHA-256 verification using system OpenSSH.
+- [x] 4.3 Implement a durable remote launcher with PID, process identity, heartbeat, status, stdout and stderr artifacts.
+- [x] 4.4 Implement disconnect-safe reconcile, approved cancel and manifest-first result collection with partial-transfer quarantine.
 - [ ] 4.5 Run an AutoDL read-only preflight and a bounded backend qualification job, including simulated disconnect/reconnect and zero-relaunch replay.
 - [ ] 4.6 Verify remote and local logs, manifests and errors contain no credential or direct connection secret.
 
