@@ -16,6 +16,7 @@ from .vector_index import (
     EmbeddingProvider,
     LocalQdrantIndex,
 )
+from .qwen3 import RerankingProvider
 
 from .models import (
     EvidenceClaim,
@@ -27,6 +28,8 @@ from .models import (
 )
 
 RRF_OFFSET = 60
+ORDINARY_CANDIDATE_POOL = 6
+ALL_EVIDENCE_CANDIDATE_POOL = 10
 
 
 @dataclass
@@ -49,10 +52,12 @@ class HybridRetriever:
         deterministic_provider: RetrievalProvider,
         vector_index: LocalQdrantIndex,
         embedder: EmbeddingProvider,
+        reranker: RerankingProvider,
     ) -> None:
         self._deterministic = deterministic_provider
         self._vector_index = vector_index
         self._embedder = embedder
+        self._reranker = reranker
 
     def search(
         self,
@@ -62,34 +67,76 @@ class HybridRetriever:
     ) -> HybridRetrievalResponse:
         if request.project_id != scope.project_id:
             raise ValueError("retrieval request and metadata scope project mismatch")
-        deterministic = self._deterministic.search(request)
+        candidate_limit = max(
+            request.max_sections,
+            (
+                ALL_EVIDENCE_CANDIDATE_POOL
+                if scope.evidence_mode == "all"
+                else ORDINARY_CANDIDATE_POOL
+            ),
+        )
+        candidate_request = request.model_copy(
+            update={"max_sections": candidate_limit}
+        )
+        deterministic = self._deterministic.search(candidate_request)
         vector_hits = self._vector_index.search(
             query_vector=self._embedder.embed_query(request.query),
             scope=scope,
-            limit=request.max_sections * 2,
+            limit=candidate_limit,
         )
-        candidates = _fused_candidates(
-            deterministic.evidence,
-            vector_hits,
+        candidates = tuple(
+            sorted(
+                _fused_candidates(
+                    deterministic.evidence,
+                    vector_hits,
+                ),
+                key=lambda item: (-_rrf_score(item), item.evidence_id),
+            )[:candidate_limit]
         )
         conflicts = _conflicts(candidates)
         conflict_keys = {
             conflict.claim_key
             for conflict in conflicts
         }
-        evidence = tuple(
+        fused_evidence = tuple(
             _to_evidence(candidate, conflict_keys)
-            for candidate in sorted(
-                candidates,
+            for candidate in candidates
+        )
+        reranked = self._reranker.rerank(
+            query=request.query,
+            evidence=fused_evidence,
+        )
+        ranked_evidence = tuple(
+            item.evidence.model_copy(
+                update={
+                    "reranker_score": item.reranker_score,
+                    "reranker_rank": item.reranker_rank,
+                    "reranker_model_id": item.model_id,
+                    "reranker_model_revision": item.model_revision,
+                }
+            )
+            for item in reranked
+        )
+        evidence = tuple(
+            sorted(
+                ranked_evidence,
                 key=lambda item: (
-                    -_rrf_score(item),
+                    not bool(item.conflict_keys),
+                    item.reranker_rank,
                     item.evidence_id,
                 ),
             )[: request.max_sections]
         )
+        model_label = (
+            f"{reranked[0].model_id}@{reranked[0].model_revision}"
+            if reranked
+            else "no-rerank-candidates"
+        )
         return HybridRetrievalResponse(
             request_id=request.request_id,
-            backend=f"{deterministic.backend}+qdrant-local+rrf",
+            backend=(
+                f"{deterministic.backend}+qdrant-local+rrf+{model_label}"
+            ),
             evidence=evidence,
             conflicts=conflicts,
             decision_safe=(

@@ -49,6 +49,14 @@ class LocalQdrantIndex:
         self._closed = False
         self._provenance = ProvenanceValidator()
 
+    @property
+    def collection_name(self) -> str:
+        return self._collection_name
+
+    @property
+    def vector_size(self) -> int:
+        return self._vector_size
+
     def __enter__(self) -> Self:
         self._ensure_open()
         return self

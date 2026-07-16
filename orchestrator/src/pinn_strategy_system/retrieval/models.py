@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Self
+from typing import Literal, Self
 
 from pydantic import Field, JsonValue, model_validator
 
@@ -34,6 +34,7 @@ class RetrievalScope(VersionedModel):
     framework: str | None = Field(default=None, max_length=256)
     applicable_version: str | None = Field(default=None, max_length=256)
     languages: tuple[str, ...] = ()
+    evidence_mode: Literal["single", "all"] = "single"
 
 
 class VectorHit(VersionedModel):
@@ -50,6 +51,13 @@ class HybridEvidence(VersionedModel):
     deterministic_rank: int | None = Field(default=None, ge=1)
     vector_rank: int | None = Field(default=None, ge=1)
     fused_score: float = Field(allow_inf_nan=False, ge=0)
+    reranker_score: float | None = Field(default=None, allow_inf_nan=False)
+    reranker_rank: int | None = Field(default=None, ge=1)
+    reranker_model_id: str | None = Field(default=None, max_length=512)
+    reranker_model_revision: str | None = Field(
+        default=None,
+        pattern=r"^[0-9a-f]{40}$",
+    )
     claims: tuple[EvidenceClaim, ...] = ()
     conflict_keys: tuple[str, ...] = ()
     provenance_validated: bool
@@ -59,6 +67,14 @@ class HybridEvidence(VersionedModel):
         if self.source_ref.line_start is None and self.artifact_range is None:
             raise ValueError("hybrid evidence requires a source or artifact range")
         return self
+
+
+class RerankedEvidence(VersionedModel):
+    evidence: HybridEvidence
+    reranker_score: float = Field(allow_inf_nan=False)
+    reranker_rank: int = Field(ge=1)
+    model_id: str = Field(min_length=1, max_length=512)
+    model_revision: str = Field(pattern=r"^[0-9a-f]{40}$")
 
 
 class EvidenceConflict(VersionedModel):

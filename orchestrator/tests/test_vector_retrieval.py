@@ -25,6 +25,7 @@ from pinn_strategy_system.retrieval import (  # noqa: E402
     IndexedKnowledgeDocument,
     LocalQdrantIndex,
     ProvenanceError,
+    RerankedEvidence,
     RetrievalScope,
 )
 
@@ -58,6 +59,28 @@ class FixedDeterministicProvider:
             source_sha256=self._source_sha,
             evidence=self._evidence,
             read_only=True,
+        )
+
+
+class DeterministicReranker:
+    def __init__(self) -> None:
+        self.candidate_counts: list[int] = []
+
+    def rerank(self, *, query, evidence):
+        self.candidate_counts.append(len(evidence))
+        ranked = sorted(
+            evidence,
+            key=lambda item: (-item.fused_score, item.evidence_id),
+        )
+        return tuple(
+            RerankedEvidence(
+                evidence=item,
+                reranker_score=item.fused_score,
+                reranker_rank=rank,
+                model_id="test/deterministic-reranker",
+                model_revision="0" * 40,
+            )
+            for rank, item in enumerate(ranked, start=1)
         )
 
 
@@ -320,6 +343,7 @@ class VectorRetrievalTests(unittest.TestCase):
                     deterministic_provider=deterministic,
                     vector_index=index,
                     embedder=DeterministicEmbedding(),
+                    reranker=DeterministicReranker(),
                 )
                 response = retriever.search(
                     RetrievalRequest(
@@ -437,6 +461,7 @@ class VectorRetrievalTests(unittest.TestCase):
                     deterministic_provider=deterministic,
                     vector_index=index,
                     embedder=DeterministicEmbedding(),
+                    reranker=DeterministicReranker(),
                 )
                 response = retriever.search(
                     RetrievalRequest(
@@ -477,6 +502,7 @@ class VectorRetrievalTests(unittest.TestCase):
                     deterministic_provider=deterministic,
                     vector_index=index,
                     embedder=DeterministicEmbedding(),
+                    reranker=DeterministicReranker(),
                 )
                 response = retriever.search(
                     RetrievalRequest(
@@ -490,6 +516,57 @@ class VectorRetrievalTests(unittest.TestCase):
                 self.assertEqual(len(response.evidence), 1)
                 self.assertEqual(response.evidence[0].deterministic_rank, 1)
                 self.assertIsNone(response.evidence[0].vector_rank)
+
+    def test_candidate_pool_is_six_for_single_and_ten_for_all_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            knowledge = root / "knowledge"
+            vectors = root / "vectors"
+            knowledge.mkdir()
+            vectors.mkdir()
+            specs = tuple(
+                {
+                    "chunk_id": f"boundary-{index:02d}",
+                    "project_id": "project-1",
+                    "text": f"boundary evidence {index:02d}",
+                }
+                for index in range(12)
+            )
+            source, _, source_sha = _write_source(knowledge, specs)
+            deterministic = FixedDeterministicProvider((), source_sha)
+            reranker = DeterministicReranker()
+            with LocalQdrantIndex(
+                root=vectors,
+                collection_name="knowledge",
+                vector_size=3,
+            ) as index:
+                index.rebuild(
+                    source=source,
+                    embedder=DeterministicEmbedding(),
+                )
+                retriever = HybridRetriever(
+                    deterministic_provider=deterministic,
+                    vector_index=index,
+                    embedder=DeterministicEmbedding(),
+                    reranker=reranker,
+                )
+                for request_id, mode in (
+                    ("request-single", "single"),
+                    ("request-all", "all"),
+                ):
+                    retriever.search(
+                        RetrievalRequest(
+                            request_id=request_id,
+                            project_id="project-1",
+                            query="boundary",
+                            max_sections=5,
+                        ),
+                        scope=RetrievalScope(
+                            project_id="project-1",
+                            evidence_mode=mode,
+                        ),
+                    )
+            self.assertEqual(reranker.candidate_counts, [6, 10])
 
 
 if __name__ == "__main__":

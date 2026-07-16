@@ -34,13 +34,13 @@
 
 ## 5. Qwen3 Retrieval Providers and Index Governance
 
-- [ ] 5.1 Define versioned embedding, reranking, health and error request/response contracts plus an injected `ModelTransport` interface.
-- [ ] 5.2 Implement isolated subprocess/remote JSONL transports with timeouts, request IDs, size limits and sanitized errors.
-- [ ] 5.3 Implement `Qwen3EmbeddingProvider` pinned to the accepted 8B revision and validate dimensions, finiteness and provenance.
-- [ ] 5.4 Implement `Qwen3RerankerProvider` pinned to the accepted 4B revision and preserve source/conflict metadata through ranking.
-- [ ] 5.5 Enforce adaptive candidate pools of at least 6 for ordinary queries and 10 for conflict/all-evidence queries.
-- [ ] 5.6 Version Qdrant collections from model/chunk/metadata/source identities and implement build, canary, atomic activation and rollback.
-- [ ] 5.7 Reproduce the accepted cross-language, historical, conflict and determinism gates through the production provider path.
+- [x] 5.1 Define versioned embedding, reranking, health and error request/response contracts plus an injected `ModelTransport` interface.
+- [x] 5.2 Implement isolated subprocess/remote JSONL transports with timeouts, request IDs, size limits and sanitized errors.
+- [x] 5.3 Implement `Qwen3EmbeddingProvider` pinned to the accepted 8B revision and validate dimensions, finiteness and provenance.
+- [x] 5.4 Implement `Qwen3RerankerProvider` pinned to the accepted 4B revision and preserve source/conflict metadata through ranking.
+- [x] 5.5 Enforce adaptive candidate pools of at least 6 for ordinary queries and 10 for conflict/all-evidence queries.
+- [x] 5.6 Version Qdrant collections from model/chunk/metadata/source identities and implement build, canary, atomic activation and rollback.
+- [x] 5.7 Reproduce the accepted cross-language, historical, conflict and determinism gates through the production provider path.
 
 ## 6. Operator CLI
 
