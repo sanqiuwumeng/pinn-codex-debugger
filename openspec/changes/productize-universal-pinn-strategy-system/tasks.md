@@ -62,8 +62,8 @@
 
 ## 8. Closed-Loop Release Qualification
 
-- [ ] 8.1 Apply `Debug -> First-Principles Refactoring -> Simplification` to each implementation batch and remove duplicated validation-only control logic.
-- [ ] 8.2 Run orchestrator, MCP, CLI, backend, retrieval, OpenSpec and architecture-boundary suites in their locked environments.
-- [ ] 8.3 Run credential, absolute-path, no-global-state, no-thermal-import and artifact-provenance audits.
-- [ ] 8.4 Produce a Phase 2 evidence report with baseline commit, environment manifests, model revisions, backend results and scientific boundaries.
-- [ ] 8.5 Mark this OpenSpec complete only when every release gate passes and no mandatory work remains.
+- [x] 8.1 Apply `Debug -> First-Principles Refactoring -> Simplification` to each implementation batch and remove duplicated validation-only control logic.
+- [x] 8.2 Run orchestrator, MCP, CLI, backend, retrieval, OpenSpec and architecture-boundary suites in their locked environments.
+- [x] 8.3 Run credential, absolute-path, no-global-state, no-thermal-import and artifact-provenance audits.
+- [x] 8.4 Produce a Phase 2 evidence report with baseline commit, environment manifests, model revisions, backend results and scientific boundaries.
+- [x] 8.5 Mark this OpenSpec complete only when every release gate passes and no mandatory work remains.
