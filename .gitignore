@@ -7,3 +7,26 @@ __pycache__/
 build/
 dist/
 wheelhouse_tmp/
+
+# Dated safety backups are preserved locally, not versioned.
+**/backups/
+**/*_backup_????-??-??*
+
+# Governed experiment outputs remain in the artifact store and are referenced
+# by tracked reports and SHA-256 manifests.
+validation/**/results/
+validation/full/preflight/
+validation/**/*.log
+validation/**/*.sqlite3
+validation/**/*.sqlite3-shm
+validation/**/*.sqlite3-wal
+validation/**/*.pid
+validation/**/*.status
+validation/**/*.npz
+validation/**/*.npy
+validation/**/*.pth
+validation/**/*.pt
+validation/**/*.pkl
+validation/**/*.png
+validation/**/*.gz
+validation/dependencies/*pip-dry-run*.json

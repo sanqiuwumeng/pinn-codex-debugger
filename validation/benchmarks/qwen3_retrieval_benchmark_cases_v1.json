@@ -1,0 +1,254 @@
+{
+  "schema_version": "qwen3-retrieval-benchmark-v1",
+  "corpus": [
+    {
+      "id": "boundary_hard_constraints",
+      "title": "Boundary handling and hard constraints",
+      "text": "Validate boundary errors separately from interior residuals. Dirichlet conditions can be encoded with distance functions or other hard constraints when penalty-only boundary loss remains unstable.",
+      "source_kind": "handbook-derived",
+      "claims": []
+    },
+    {
+      "id": "temporal_causal_propagation",
+      "title": "Causal training for late-time drift",
+      "text": "A transient PINN may fit early time slices but accumulate error later. Diagnose temporal propagation, time-window sampling, causal weighting, and validation at aligned time coordinates.",
+      "source_kind": "handbook-derived",
+      "claims": []
+    },
+    {
+      "id": "localized_adaptive_sampling",
+      "title": "Localized residual hotspots",
+      "text": "A small high-error region can be hidden by acceptable global averages. Localize the region, inspect its physical context, and use adaptive or region-aware sampling rather than only increasing uniform points.",
+      "source_kind": "handbook-derived",
+      "claims": []
+    },
+    {
+      "id": "high_frequency_representation",
+      "title": "High-frequency representation and spectral bias",
+      "text": "Smooth predictions that miss narrow peaks, oscillation amplitude, or phase can indicate spectral bias. Consider Fourier features or suitable architectures after verifying data resolution and derivatives.",
+      "source_kind": "handbook-derived",
+      "claims": []
+    },
+    {
+      "id": "inverse_identifiability",
+      "title": "Inverse parameter identifiability",
+      "text": "Accurate state reconstruction does not guarantee identifiable physical parameters. Check sensitivity, priors, parameter coupling, bounds, and whether observations uniquely constrain the inverse problem.",
+      "source_kind": "handbook-derived",
+      "claims": []
+    },
+    {
+      "id": "conservation_structure",
+      "title": "Conservation and physical structure",
+      "text": "Low pointwise field error can coexist with systematic drift in total mass or energy. Add explicit conservation diagnostics and structure-preserving constraints before accepting the model.",
+      "source_kind": "handbook-derived",
+      "claims": []
+    },
+    {
+      "id": "high_order_autodiff",
+      "title": "High-order PDE automatic differentiation",
+      "text": "Fourth-order derivatives can make training slow, memory intensive, and numerically unstable. Audit derivative scaling and consider order reduction or mixed formulations instead of blindly deepening the network.",
+      "source_kind": "handbook-derived",
+      "claims": []
+    },
+    {
+      "id": "operator_learning",
+      "title": "Operator learning for repeated parameter solves",
+      "text": "When many parameter combinations must be solved, retraining one PINN for every case is inefficient. DeepONet, FNO, or physics-informed operator learning can amortize inference across a parameter family.",
+      "source_kind": "handbook-derived",
+      "claims": []
+    },
+    {
+      "id": "underspecified_evidence",
+      "title": "Evidence required before method selection",
+      "text": "A vague report that a PINN performs poorly is not enough to select an advanced method. Request observable symptoms, reference truth, loss curves, localized errors, physical checks, and reproducible run evidence first.",
+      "source_kind": "governance-derived",
+      "claims": []
+    },
+    {
+      "id": "unit_kelvin_radiation",
+      "title": "Absolute temperature at radiation boundaries",
+      "text": "Radiative heat-transfer laws require absolute temperature. Convert Celsius inputs to kelvin exactly once before the fourth-power radiation term and preserve the raw unit provenance.",
+      "source_kind": "physical-audit-fixture",
+      "claims": [
+        {
+          "key": "radiation_temperature_unit",
+          "value": "K"
+        }
+      ]
+    },
+    {
+      "id": "unit_celsius_legacy_conflict",
+      "title": "Conflicting legacy temperature note",
+      "text": "A legacy note claims that the radiation boundary should consume the temperature value directly in degrees Celsius without conversion. This statement conflicts with the absolute-temperature requirement.",
+      "source_kind": "conflict-fixture",
+      "claims": [
+        {
+          "key": "radiation_temperature_unit",
+          "value": "degC"
+        }
+      ]
+    },
+    {
+      "id": "metric_priority_localization",
+      "title": "Metric priority and max_abs localization",
+      "text": "Do not optimize a PINN from MSE or RMSE alone. Ask the user to prioritize reference metrics and guardrails, then localize max_abs by spatial coordinates, time, physical region, and neighboring residual context.",
+      "source_kind": "workflow-contract",
+      "claims": []
+    },
+    {
+      "id": "historical_metric_tradeoff",
+      "title": "Historical experiment with metric tradeoff",
+      "text": "A validated historical experiment reduced RMSE and the maximum absolute error but increased MAE. The optimization decision must remain pending until the user defines metric priority and the allowed MAE regression.",
+      "source_kind": "sanitized-experiment-report",
+      "claims": []
+    },
+    {
+      "id": "unit_mass_consistency",
+      "title": "Mass-unit consistency before PINN experiments",
+      "text": "Audit density, heat capacity, conductivity, latent heat, sources, and geometry before training. Mixing kilogram-based quantities with gram-based values can silently scale a thermal PDE by orders of magnitude.",
+      "source_kind": "physical-audit-contract",
+      "claims": []
+    },
+    {
+      "id": "provenance_index_rebuild",
+      "title": "Derived vector index and source provenance",
+      "text": "The vector database is a rebuildable derived index. Authoritative handbook, experiment, Wiki, and Skill records retain hashes and source ranges, and index deletion must not delete source evidence.",
+      "source_kind": "retrieval-governance-contract",
+      "claims": []
+    }
+  ],
+  "cases": [
+    {
+      "id": "canonical-boundary",
+      "group": "canonical",
+      "mode": "single",
+      "query": "我的 PINN 内域误差已经降下来，但边界附近始终偏差很大，边界点上的误差曲线也不稳定。",
+      "expected_ids": ["boundary_hard_constraints"]
+    },
+    {
+      "id": "canonical-late-time",
+      "group": "canonical",
+      "mode": "single",
+      "query": "瞬态问题开始的一小段时间预测还可以，但越往后偏差越明显，最后完全失真。",
+      "expected_ids": ["temporal_causal_propagation"]
+    },
+    {
+      "id": "canonical-hotspot",
+      "group": "canonical",
+      "mode": "single",
+      "query": "全域平均误差可以接受，但误差图里有一个很小的区域一直特别亮。",
+      "expected_ids": ["localized_adaptive_sampling"]
+    },
+    {
+      "id": "canonical-frequency",
+      "group": "canonical",
+      "mode": "single",
+      "query": "真实解有持续振荡和很窄的峰，但训练曲线明显更平滑，峰值和相位都不对。",
+      "expected_ids": ["high_frequency_representation"]
+    },
+    {
+      "id": "canonical-inverse",
+      "group": "canonical",
+      "mode": "single",
+      "query": "反演状态量拟合不错，但待识别参数来回漂移，最终超出合理范围。",
+      "expected_ids": ["inverse_identifiability"]
+    },
+    {
+      "id": "canonical-conservation",
+      "group": "canonical",
+      "mode": "single",
+      "query": "预测场相对误差不大，但总质量会随着时间持续偏移。",
+      "expected_ids": ["conservation_structure"]
+    },
+    {
+      "id": "canonical-high-order",
+      "group": "canonical",
+      "mode": "single",
+      "query": "方程需要四阶导数，训练很慢，显存占用高，而且损失曲线抖动明显。",
+      "expected_ids": ["high_order_autodiff"]
+    },
+    {
+      "id": "canonical-operator",
+      "group": "canonical",
+      "mode": "single",
+      "query": "需要对大量不同参数组合快速求解，但每换一组参数都要重新训练。",
+      "expected_ids": ["operator_learning"]
+    },
+    {
+      "id": "canonical-underspecified",
+      "group": "canonical",
+      "mode": "single",
+      "query": "我的 PINN 效果不理想，请直接挑一个更先进的方法。",
+      "expected_ids": ["underspecified_evidence"]
+    },
+    {
+      "id": "paraphrase-boundary",
+      "group": "paraphrase",
+      "mode": "single",
+      "query": "靠近约束边的预测总是漏到外面，域内部误差反而还可以。",
+      "expected_ids": ["boundary_hard_constraints"]
+    },
+    {
+      "id": "english-late-time",
+      "group": "cross_language",
+      "mode": "single",
+      "query": "The transient solution is accurate initially but drifts badly at later time steps. What evidence should be checked?",
+      "expected_ids": ["temporal_causal_propagation"]
+    },
+    {
+      "id": "english-operator",
+      "group": "cross_language",
+      "mode": "single",
+      "query": "We need thousands of fast solves across a parameter family and cannot retrain a separate PINN each time.",
+      "expected_ids": ["operator_learning"]
+    },
+    {
+      "id": "mixed-code-units",
+      "group": "code_and_units",
+      "mode": "single",
+      "query": "config 里的 density 用 kg/m^3，但另一个材料参数按 g 录入；训练前应检查什么？",
+      "expected_ids": ["unit_mass_consistency"]
+    },
+    {
+      "id": "metric-max-abs",
+      "group": "metric_priority",
+      "mode": "single",
+      "query": "RMSE 降了就能决定优化成功吗？我还想知道 max_abs 出现在哪个时刻和坐标。",
+      "expected_ids": ["metric_priority_localization"]
+    },
+    {
+      "id": "historical-tradeoff",
+      "group": "historical_experiment",
+      "mode": "single",
+      "query": "查找以前那个 RMSE 和最大误差改善、但 MAE 反而退化的实验结论。",
+      "expected_ids": ["historical_metric_tradeoff"]
+    },
+    {
+      "id": "temperature-conflict",
+      "group": "conflict",
+      "mode": "all",
+      "query": "辐射边界到底应该使用 K 还是直接使用摄氏度？请找出相互冲突的证据。",
+      "expected_ids": [
+        "unit_kelvin_radiation",
+        "unit_celsius_legacy_conflict"
+      ]
+    },
+    {
+      "id": "index-provenance",
+      "group": "provenance",
+      "mode": "single",
+      "query": "如果删除并重建向量库，怎样确保实验 Wiki 和源证据不会一起丢失？",
+      "expected_ids": ["provenance_index_rebuild"]
+    }
+  ],
+  "thresholds": {
+    "dense_recall_at_3": 0.9,
+    "hybrid_recall_at_3": 0.9,
+    "rerank_recall_at_1": 0.9,
+    "cross_language_rerank_at_1": 1.0,
+    "historical_rerank_at_1": 1.0,
+    "conflict_all_at_5": 1.0,
+    "conflict_key_detected": true,
+    "repeat_rankings_identical": true
+  }
+}

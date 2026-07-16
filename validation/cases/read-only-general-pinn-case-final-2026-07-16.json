@@ -1,0 +1,364 @@
+{
+  "case_root": "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D",
+  "baseline": "full",
+  "candidate": "hybrid_rag_optimized_v2",
+  "read_only": {
+    "source_hashes_before": {
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\config.py": "0e1f0a9b4b20fdfff6011cc4f924ff3f5ca8b2304797301a3f76509a0e98fa97",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\physics.py": "a1e15bd3a284c938b8a2140f33223b6970105b051b5a27ef5df3ffc90f156372",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\run_benchmark.py": "9b3cce47e0983ff7e407c92d93b8ace827a216c04e139aad24142db0c681fa49",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\outputs\\full\\benchmark_config.json": "00ed2b0ecfb9db5bd909b7920c61b5aac9760b9b8db2cef45e650d2e7f77efae",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\outputs\\hybrid_rag_optimized_v2\\benchmark_config.json": "00ed2b0ecfb9db5bd909b7920c61b5aac9760b9b8db2cef45e650d2e7f77efae",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\outputs\\full\\field_metrics.json": "6b335029fa856cc460435bb679bd146887ac1dedbea9d8a55115cbdf3ed55ba7",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\outputs\\hybrid_rag_optimized_v2\\field_metrics.json": "5825b75282a7e4a1ce1047a9c70c5a159fe20656c5698594950861f1500a43b7",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\outputs\\full\\data\\aligned_fields.npz": "d2a605990e0cf048bbcd58365e41d5cb1d1d94a19ff02ae8b2c8c29a01848886",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\outputs\\hybrid_rag_optimized_v2\\data\\aligned_fields.npz": "c8871eac1a060c8975358c65f73a28e6c6f350973a0808f43738b49e6b00a9ba"
+    },
+    "source_hashes_after": {
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\config.py": "0e1f0a9b4b20fdfff6011cc4f924ff3f5ca8b2304797301a3f76509a0e98fa97",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\physics.py": "a1e15bd3a284c938b8a2140f33223b6970105b051b5a27ef5df3ffc90f156372",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\run_benchmark.py": "9b3cce47e0983ff7e407c92d93b8ace827a216c04e139aad24142db0c681fa49",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\outputs\\full\\benchmark_config.json": "00ed2b0ecfb9db5bd909b7920c61b5aac9760b9b8db2cef45e650d2e7f77efae",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\outputs\\hybrid_rag_optimized_v2\\benchmark_config.json": "00ed2b0ecfb9db5bd909b7920c61b5aac9760b9b8db2cef45e650d2e7f77efae",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\outputs\\full\\field_metrics.json": "6b335029fa856cc460435bb679bd146887ac1dedbea9d8a55115cbdf3ed55ba7",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\outputs\\hybrid_rag_optimized_v2\\field_metrics.json": "5825b75282a7e4a1ce1047a9c70c5a159fe20656c5698594950861f1500a43b7",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\outputs\\full\\data\\aligned_fields.npz": "d2a605990e0cf048bbcd58365e41d5cb1d1d94a19ff02ae8b2c8c29a01848886",
+      "E:\\vibe coding\\pinn-codex-debugger.worktrees\\skill_test\\PINN-2D\\outputs\\hybrid_rag_optimized_v2\\data\\aligned_fields.npz": "c8871eac1a060c8975358c65f73a28e6c6f350973a0808f43738b49e6b00a9ba"
+    },
+    "all_observed_sources_unchanged": true
+  },
+  "config_identity": {
+    "baseline_equals_candidate": true,
+    "reference_fem_fields_equal": true
+  },
+  "physical_audit": {
+    "status": "PASS",
+    "missing_unit_parameters": [],
+    "findings": [],
+    "source_files_unchanged": true
+  },
+  "prediction_analysis": {
+    "status": "RESULT_VALID",
+    "baseline_global_metrics": {
+      "mse": 632.2231133282698,
+      "rmse": 25.144047274221187,
+      "mae": 12.229681731893299,
+      "max_abs": 279.46508541759533,
+      "relative_l2": 0.058246833812194816
+    },
+    "candidate_global_metrics": {
+      "mse": 458.4630430273809,
+      "rmse": 21.411750115938233,
+      "mae": 13.220833026017349,
+      "max_abs": 122.48556308640173,
+      "relative_l2": 0.04960087121336066
+    },
+    "metric_deltas_candidate_minus_baseline": {
+      "mae": 0.9911512941240499,
+      "max_abs": -156.9795223311936,
+      "mse": -173.76007030088897,
+      "relative_l2": -0.008645962598834156,
+      "rmse": -3.732297158282954
+    },
+    "baseline_max_abs": {
+      "schema_version": "1.0",
+      "flat_index": 28252,
+      "coordinates": {
+        "t": 5.0,
+        "y": 0.09333333333333334,
+        "x": -0.0008333333333333318
+      },
+      "prediction": 1202.95263671875,
+      "reference": 923.4875513011547,
+      "signed_error": 279.46508541759533,
+      "absolute_error": 279.46508541759533,
+      "context": {}
+    },
+    "candidate_max_abs": {
+      "schema_version": "1.0",
+      "flat_index": 28374,
+      "coordinates": {
+        "t": 5.0,
+        "y": 0.09416666666666668,
+        "x": 0.0
+      },
+      "prediction": 1145.9512939453125,
+      "reference": 1023.4657308589108,
+      "signed_error": 122.48556308640173,
+      "absolute_error": 122.48556308640173,
+      "context": {}
+    },
+    "baseline_roi_metrics": {
+      "early_top_center": {
+        "mse": 10045.355470864955,
+        "rmse": 100.22652079596975,
+        "mae": 62.748160651629,
+        "max_abs": 279.46508541759533,
+        "relative_l2": 0.12439897963816103
+      }
+    },
+    "candidate_roi_metrics": {
+      "early_top_center": {
+        "mse": 2035.7444609063048,
+        "rmse": 45.11922495906047,
+        "mae": 28.99833005548941,
+        "max_abs": 122.48556308640173,
+        "relative_l2": 0.056001001555243714
+      }
+    },
+    "baseline_domain_metrics": {
+      "phase_accuracy": 0.9990711017007035,
+      "solid_mask_iou": 0.9994520773118913,
+      "mushy_mask_iou": 0.21686746987951808,
+      "liquid_mask_iou": 0.8342245989304813,
+      "predicted_liquid_fraction": 0.0025544703230653645,
+      "reference_liquid_fraction": 0.0021310019807390204,
+      "liquid_fraction_abs_error": 0.0004234683423263441,
+      "phase_threshold_band_mae": 34.21124110147591,
+      "liquid_extent_y_mae": 0.0005000000000000004,
+      "liquid_extent_x_mae": 0.0
+    },
+    "candidate_domain_metrics": {
+      "phase_accuracy": 0.9991803838535619,
+      "solid_mask_iou": 0.9995068695807021,
+      "mushy_mask_iou": 0.27848101265822783,
+      "liquid_mask_iou": 0.8524590163934426,
+      "predicted_liquid_fraction": 0.002499829246636159,
+      "reference_liquid_fraction": 0.0021310019807390204,
+      "liquid_fraction_abs_error": 0.00036882726589713847,
+      "phase_threshold_band_mae": 30.926379854731124,
+      "liquid_extent_y_mae": 0.0004999999999999976,
+      "liquid_extent_x_mae": 0.0
+    },
+    "error_migrated": false,
+    "findings": []
+  },
+  "metric_gate": {
+    "user_metric_contract_present": true,
+    "contract": {
+      "schema_version": "1.0",
+      "contract_id": "pinn-2d-user-confirmed-2026-07-16",
+      "physical_model_authority_ref": {
+        "schema_version": "1.0",
+        "artifact_id": "pinn-2d-physical-model-authority",
+        "uri": "file:///E:/vibe%20coding/pinn-codex-debugger.worktrees/skill_test/PINN-2D/physics.py",
+        "sha256": "a1e15bd3a284c938b8a2140f33223b6970105b051b5a27ef5df3ffc90f156372",
+        "media_type": null,
+        "size_bytes": 2552
+      },
+      "reference_evidence_refs": [
+        {
+          "schema_version": "1.0",
+          "artifact_id": "pinn-2d-fem-test-reference",
+          "uri": "file:///E:/vibe%20coding/pinn-codex-debugger.worktrees/skill_test/PINN-2D/outputs/full/data/aligned_fields.npz",
+          "sha256": "d2a605990e0cf048bbcd58365e41d5cb1d1d94a19ff02ae8b2c8c29a01848886",
+          "media_type": null,
+          "size_bytes": 460862
+        }
+      ],
+      "metrics": [
+        {
+          "schema_version": "1.0",
+          "name": "max_abs",
+          "role": "PRIMARY",
+          "direction": "MINIMIZE",
+          "evidence_basis": "REFERENCE_EVIDENCE",
+          "required": true,
+          "threshold": null,
+          "max_regression": null,
+          "max_relative_regression": null,
+          "weight": null,
+          "unit": "K"
+        },
+        {
+          "schema_version": "1.0",
+          "name": "rmse",
+          "role": "PRIMARY",
+          "direction": "MINIMIZE",
+          "evidence_basis": "REFERENCE_EVIDENCE",
+          "required": true,
+          "threshold": null,
+          "max_regression": null,
+          "max_relative_regression": null,
+          "weight": null,
+          "unit": "K"
+        },
+        {
+          "schema_version": "1.0",
+          "name": "mae",
+          "role": "GUARDRAIL",
+          "direction": "MINIMIZE",
+          "evidence_basis": "REFERENCE_EVIDENCE",
+          "required": true,
+          "threshold": null,
+          "max_regression": 1.0,
+          "max_relative_regression": 0.1,
+          "weight": null,
+          "unit": "K"
+        }
+      ],
+      "primary_order": [
+        "max_abs",
+        "rmse"
+      ],
+      "aggregation_policy": "LEXICOGRAPHIC",
+      "scalar_aggregation_authorized": false,
+      "roi_labels": [],
+      "time_windows": [],
+      "acceptable_regression_notes": [
+        "MAE must regress by no more than 1.0 K and 10 percent."
+      ]
+    },
+    "status": "ACCEPT",
+    "reasons": [
+      "primary max_abs improved under lexicographic order"
+    ],
+    "selected_intervention": null
+  },
+  "case_scope": {
+    "physical_model_authority": {
+      "schema_version": "1.0",
+      "authority_id": "pinn-2d-user-model",
+      "project_id": "pinn-2d-validation-case",
+      "model_family": "pinn",
+      "pde_family": "transient-heat-equation-with-phase-change",
+      "task_type": "forward",
+      "governing_equation_refs": [
+        {
+          "schema_version": "1.0",
+          "uri": "file:///E:/vibe%20coding/pinn-codex-debugger.worktrees/skill_test/PINN-2D/physics.py",
+          "sha256": "a1e15bd3a284c938b8a2140f33223b6970105b051b5a27ef5df3ffc90f156372",
+          "line_start": null,
+          "line_end": null,
+          "symbol": "shared PINN/FEM governing physics"
+        }
+      ],
+      "boundary_condition_refs": [
+        {
+          "schema_version": "1.0",
+          "uri": "file:///E:/vibe%20coding/pinn-codex-debugger.worktrees/skill_test/PINN-2D/physics.py",
+          "sha256": "a1e15bd3a284c938b8a2140f33223b6970105b051b5a27ef5df3ffc90f156372",
+          "line_start": null,
+          "line_end": null,
+          "symbol": "boundary conditions"
+        }
+      ],
+      "initial_condition_refs": [
+        {
+          "schema_version": "1.0",
+          "uri": "file:///E:/vibe%20coding/pinn-codex-debugger.worktrees/skill_test/PINN-2D/physics.py",
+          "sha256": "a1e15bd3a284c938b8a2140f33223b6970105b051b5a27ef5df3ffc90f156372",
+          "line_start": null,
+          "line_end": null,
+          "symbol": "initial condition"
+        }
+      ],
+      "geometry_refs": [
+        {
+          "schema_version": "1.0",
+          "uri": "file:///E:/vibe%20coding/pinn-codex-debugger.worktrees/skill_test/PINN-2D/outputs/full/benchmark_config.json",
+          "sha256": "00ed2b0ecfb9db5bd909b7920c61b5aac9760b9b8db2cef45e650d2e7f77efae",
+          "line_start": null,
+          "line_end": null,
+          "symbol": "json-pointer:/scenario"
+        }
+      ],
+      "parameter_source_refs": [
+        {
+          "schema_version": "1.0",
+          "uri": "file:///E:/vibe%20coding/pinn-codex-debugger.worktrees/skill_test/PINN-2D/outputs/full/benchmark_config.json",
+          "sha256": "00ed2b0ecfb9db5bd909b7920c61b5aac9760b9b8db2cef45e650d2e7f77efae",
+          "line_start": null,
+          "line_end": null,
+          "symbol": "json-pointer:/scenario/material"
+        }
+      ],
+      "output_channels": [
+        "temperature"
+      ],
+      "unit_system": {
+        "schema_version": "1.0",
+        "unit_system_id": "pinn-2d-test-case-si",
+        "name": "User-confirmed SI units for the PINN-2D validation case",
+        "quantity_units": {
+          "density": "kg/m^3",
+          "specific_heat": "J/(kg*K)",
+          "conductivity": "W/(m*K)",
+          "latent_heat": "J/kg",
+          "temperature": "K",
+          "length": "m",
+          "time": "s"
+        },
+        "source_refs": [
+          {
+            "schema_version": "1.0",
+            "uri": "file:///E:/vibe%20coding/pinn-codex-debugger.worktrees/hybrid-rag/openspec/changes/build-rag-multi-agent-dl-strategy-system/approval-records/2026-07-16-universal-pinn-architecture.md",
+            "sha256": "274fcdf4a6a171267fe3cad6117b8fd4e679530339d7f038c836a1e8f7260667",
+            "line_start": null,
+            "line_end": null,
+            "symbol": "user-confirmed case unit contract"
+          },
+          {
+            "schema_version": "1.0",
+            "uri": "file:///E:/vibe%20coding/pinn-codex-debugger.worktrees/skill_test/PINN-2D/outputs/full/benchmark_config.json",
+            "sha256": "00ed2b0ecfb9db5bd909b7920c61b5aac9760b9b8db2cef45e650d2e7f77efae",
+            "line_start": null,
+            "line_end": null,
+            "symbol": "case parameter values"
+          }
+        ],
+        "confirmed_by_user": true
+      },
+      "confirmed_by_user": true
+    },
+    "reference_evidence": {
+      "schema_version": "1.0",
+      "reference_id": "pinn-2d-fine-fem-test-reference",
+      "authority_id": "pinn-2d-user-model",
+      "kind": "NUMERICAL",
+      "artifact_ref": {
+        "schema_version": "1.0",
+        "artifact_id": "pinn-2d-fem-test-reference",
+        "uri": "file:///E:/vibe%20coding/pinn-codex-debugger.worktrees/skill_test/PINN-2D/outputs/full/data/aligned_fields.npz",
+        "sha256": "d2a605990e0cf048bbcd58365e41d5cb1d1d94a19ff02ae8b2c8c29a01848886",
+        "media_type": null,
+        "size_bytes": 460862
+      },
+      "output_channels": [
+        "temperature"
+      ],
+      "coordinate_system": "cartesian",
+      "channel_units": {
+        "temperature": "K"
+      },
+      "source_refs": [
+        {
+          "schema_version": "1.0",
+          "uri": "file:///E:/vibe%20coding/pinn-codex-debugger.worktrees/skill_test/PINN-2D/run_benchmark.py",
+          "sha256": "9b3cce47e0983ff7e407c92d93b8ace827a216c04e139aad24142db0c681fa49",
+          "line_start": null,
+          "line_end": null,
+          "symbol": "fine FEM reference selection"
+        }
+      ],
+      "test_case_only": true,
+      "limitations": [
+        "Numerical validation reference for this PINN-2D case only."
+      ]
+    },
+    "evaluation_basis": {
+      "ready": true,
+      "checks": {
+        "authority_confirmed": true,
+        "unit_system_confirmed": true,
+        "reference_ids_unique": true,
+        "reference:pinn-2d-fine-fem-test-reference:authority": true,
+        "reference:pinn-2d-fine-fem-test-reference:channels": true,
+        "reference:pinn-2d-fine-fem-test-reference:unit:temperature": true
+      },
+      "reasons": []
+    },
+    "roi_role": "case diagnostic only; not a universal default",
+    "domain_provider": "heat-transfer.phase-change.v1"
+  }
+}

@@ -1,12 +1,28 @@
 # PINN Hybrid RAG
 
-PINN Hybrid RAG is a local, deterministic MCP service for retrieving
-handbook-grounded evidence when debugging Physics-Informed Neural Networks
-(PINNs).
+PINN Hybrid RAG combines a local, deterministic MCP evidence service with a
+governed orchestration package for strategy optimization across general
+Physics-Informed Neural Network (PINN) models.
 
-It is packaged as a product-facing tool, not as an experiment archive. The
-repository contains only the runtime source, the source handbook, and the
-minimal configuration needed to run the service.
+The MCP product remains read-only. The separate `orchestrator` package adds
+versioned contracts, LangGraph gates, physical-model assurance, metric-policy
+decisions, provider-scoped diagnostics, experiment governance and persistent
+evidence boundaries without moving those side effects into the MCP server.
+
+## Architecture Scope
+
+The strategy system is PINN-general rather than heat-transfer-specific:
+
+- the user's PDE, BC, IC, geometry and parameters define the physical authority;
+- analytic, experimental, numerical and teacher data are optional reference
+  evidence, not universal truth sources;
+- model units may be SI or non-SI when their conversion chain is explicit and
+  internally consistent;
+- generic field metrics and localization stay in the core;
+- heat transfer, fluid, elasticity, wave and inverse-problem metrics are loaded
+  only through explicitly selected domain providers;
+- ROI, time windows, thresholds and provider selection belong to each case
+  contract.
 
 ## What It Does
 
@@ -43,20 +59,28 @@ training decisions should still go through normal engineering review.
 .
 |-- PINN报错诊断与模块选择手册.md
 |-- README.md
-`-- mcp-server/
-    |-- README.md
-    |-- mcp-config.example.json
-    |-- pyproject.toml
-    |-- pinn_hybrid_rag/
-    |   `-- resources/
-    |-- hybrid_rag/
-    `-- rules_mcp/
+|-- mcp-server/
+|   |-- README.md
+|   |-- mcp-config.example.json
+|   |-- pyproject.toml
+|   |-- pinn_hybrid_rag/
+|   |   `-- resources/
+|   |-- hybrid_rag/
+|   `-- rules_mcp/
+|-- orchestrator/
+|   |-- pyproject.toml
+|   |-- src/pinn_strategy_system/
+|   `-- tests/
+|-- openspec/
+`-- validation/
 ```
 
 ## Requirements
 
 - Python 3.11 or compatible modern Python
-- No third-party Python packages required
+- The MCP package has no third-party runtime dependency
+- The orchestration package uses the separately approved
+  `pinn_strategy_orchestrator` conda environment
 - UTF-8 capable terminal or MCP client
 
 Use any Python 3.11+ interpreter on the target machine. If your MCP client uses
