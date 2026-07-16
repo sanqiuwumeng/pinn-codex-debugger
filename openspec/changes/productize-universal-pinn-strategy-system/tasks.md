@@ -72,8 +72,8 @@
 
 - [x] 9.1 Record the user's correction that Poisson, Burgers, lid-driven-cavity Navier-Stokes and 2D heat transfer are peer scientific validation cases with no primary/secondary hierarchy.
 - [ ] 9.2 Promote the existing Poisson implementation to the same governed multi-seed scientific lifecycle and retain all accepted and rejected outcomes.
-- [ ] 9.3 Implement an independent `Re=100` lid-driven-cavity CFD reference with grid-convergence evidence and Ghia centerline cross-validation.
-- [ ] 9.4 Implement the multi-output `u,v,p` NS PINN worker and a physically isolated NS domain metric provider with gauge-invariant pressure handling.
+- [x] 9.3 Implement an independent `Re=100` lid-driven-cavity CFD reference with grid-convergence evidence and Ghia centerline cross-validation.
+- [x] 9.4 Implement the multi-output `u,v,p` NS PINN worker and a physically isolated NS domain metric provider with gauge-invariant pressure handling.
 - [ ] 9.5 Complete NS audit, approved metric contract, baseline localization, single-intervention smoke, at least three predeclared full seeds, localized analysis, replay and provenance validation.
 - [ ] 9.6 Replace hierarchical cross-case wording with a peer case-by-capability evidence matrix and regenerate governed Wiki/Skill candidates without automatic publication.
 - [ ] 9.7 Run full engineering, scientific, credential, semantic-isolation and artifact-provenance release gates, then issue a superseding evidence report and close this extension only if no mandatory task remains.

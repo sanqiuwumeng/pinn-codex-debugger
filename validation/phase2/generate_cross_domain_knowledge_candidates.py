@@ -53,19 +53,34 @@ def _write_json(path: Path, payload: Any) -> None:
 
 
 def generate(
-    *, thermal_root: Path, burgers_root: Path, output: Path
+    *,
+    thermal_root: Path,
+    burgers_root: Path,
+    poisson_root: Path,
+    ns_root: Path,
+    output: Path,
 ) -> None:
     thermal_root = thermal_root.resolve(strict=True)
     burgers_root = burgers_root.resolve(strict=True)
+    poisson_root = poisson_root.resolve(strict=True)
+    ns_root = ns_root.resolve(strict=True)
     thermal_aggregate_path = thermal_root / "thermal-multiseed-aggregate.json"
     thermal_seed7_path = thermal_root / "seed-7-attempt2" / "seed-execution-report.json"
     burgers_report_path = burgers_root / "burgers-qualification-report.json"
     burgers_gates_path = burgers_root / "burgers-qualification-gates.json"
+    poisson_report_path = poisson_root / "poisson-multiseed-aggregate.json"
+    ns_report_path = ns_root / "lid-cavity-qualification-report.json"
+    ns_gates_path = ns_root / "lid-cavity-qualification-gates.json"
     thermal_aggregate = json.loads(
         thermal_aggregate_path.read_text(encoding="utf-8")
     )
     thermal_seed7 = json.loads(thermal_seed7_path.read_text(encoding="utf-8"))
     burgers_report = json.loads(burgers_report_path.read_text(encoding="utf-8"))
+    poisson_report = json.loads(poisson_report_path.read_text(encoding="utf-8"))
+    ns_report = json.loads(ns_report_path.read_text(encoding="utf-8"))
+    ns_gates = json.loads(ns_gates_path.read_text(encoding="utf-8"))
+    if poisson_report["status"] != "PASS" or not ns_gates["status"].startswith("PASS"):
+        raise RuntimeError("all peer-case evidence must pass governance gates")
     burgers_seed2026 = next(
         item for item in burgers_report["per_seed"] if item["seed"] == 2026
     )
@@ -90,15 +105,19 @@ def generate(
         _artifact("thermal-seed7-accepted", thermal_seed7_path),
         _artifact("burgers-multiseed-report", burgers_report_path),
         _artifact("burgers-release-gates", burgers_gates_path),
+        _artifact("poisson-multiseed-report", poisson_report_path),
+        _artifact("lid-cavity-multiseed-report", ns_report_path),
+        _artifact("lid-cavity-release-gates", ns_gates_path),
     )
     wiki = service.create_wiki_candidate(
-        candidate_id="wiki-cross-domain-localized-collocation-20260717",
-        title="Localized collocation remains case- and seed-scoped",
+        candidate_id="wiki-peer-pinn-localized-collocation-20260717",
+        title="Localized collocation remains scoped across peer PINN cases",
         conclusion=(
-            "Across the declared thermal and viscous Burgers qualifications, "
-            "localized collocation produced mixed seed outcomes (thermal 2/3; "
-            "Burgers 1/3). Localized diagnosis is reusable, but the sampling "
-            "intervention is not a universal scientific optimization rule."
+            "Across the peer Poisson, viscous Burgers, lid-driven-cavity "
+            "Navier-Stokes and two-dimensional heat-transfer qualifications, "
+            "localized collocation produced case- and seed-dependent outcomes. "
+            "Localized diagnosis is reusable, but the sampling intervention is "
+            "not a universal scientific optimization rule."
         ),
         run_id=burgers_validation.subject_id,
         source_snapshot_ref=_artifact(
@@ -108,6 +127,8 @@ def generate(
             _artifact("burgers-reference-fields", reference_fields_path),
             cross_domain_refs[0],
             cross_domain_refs[2],
+            cross_domain_refs[4],
+            cross_domain_refs[5],
         ),
         environment_ref=_artifact(
             "burgers-training-environment", evidence_root / "environment.json"
@@ -126,7 +147,7 @@ def generate(
         claim_scope=ClaimScope.SCIENTIFIC_EFFECTIVENESS,
     )
     skill = service.create_skill_candidate(
-        candidate_id="skill-localized-error-first-governance-20260717",
+        candidate_id="skill-peer-localized-error-first-governance-20260717",
         pattern_key="diagnose-localize-single-intervention-then-case-contract",
         title="Localize error before a single governed intervention",
         statement=(
@@ -139,7 +160,50 @@ def generate(
         validation_reports=(thermal_validation, burgers_validation),
         evidence_refs=cross_domain_refs,
     )
+    peer_matrix = {
+        "hierarchy": "NONE",
+        "case_order_is_not_rank": True,
+        "cases": {
+            "poisson_2d": {
+                "capability": "steady linear elliptic operator and hard boundary constraint",
+                "reference": "manufactured analytic solution",
+                "metric_policy": "relative_l2 -> PDE residual RMS; boundary hard constraint",
+                "accepted_seeds": poisson_report["accepted_seeds"],
+                "rejected_seeds": poisson_report["rejected_seeds"],
+                "evidence_ref": cross_domain_refs[4].model_dump(mode="json"),
+            },
+            "viscous_burgers": {
+                "capability": "nonlinear transient transport with high gradients",
+                "reference": "independently converged numerical solution",
+                "metric_policy": "relative_l2 -> max_abs with residual and high-gradient guardrails",
+                "accepted_seeds": burgers_report["accepted_seeds"],
+                "rejected_seeds": burgers_report["rejected_seeds"],
+                "evidence_ref": cross_domain_refs[2].model_dump(mode="json"),
+            },
+            "lid_cavity_ns_2d": {
+                "capability": "multi-output incompressibility and coupled momentum",
+                "reference": "grid-converged CFD with Ghia centerline cross-validation",
+                "metric_policy": "velocity relative_l2 -> vector max_abs -> centerline RMSE",
+                "accepted_seeds": ns_report["accepted_seeds"],
+                "rejected_seeds": ns_report["rejected_seeds"],
+                "evidence_ref": cross_domain_refs[5].model_dump(mode="json"),
+            },
+            "heat_transfer_2d": {
+                "capability": "physical units, unit consistency and complex thermal boundaries",
+                "reference": "user-authoritative physical model with test reference evidence",
+                "metric_policy": "max_abs -> RMSE with MAE guardrail",
+                "accepted_seeds": [
+                    item["seed"]
+                    for item in thermal_aggregate["per_seed"]
+                    if item["decision"]["status"] == "ACCEPT"
+                ],
+                "rejected_seeds": thermal_aggregate["rejected_seeds"],
+                "evidence_ref": cross_domain_refs[0].model_dump(mode="json"),
+            },
+        },
+    }
     payload = {
+        "peer_case_evidence_matrix": peer_matrix,
         "thermal_outcomes": {
             "accepted": thermal_aggregate["accept_count"],
             "total": len(thermal_aggregate["per_seed"]),
@@ -149,11 +213,21 @@ def generate(
             "accepted_seeds": burgers_report["accepted_seeds"],
             "rejected_seeds": burgers_report["rejected_seeds"],
         },
+        "poisson_outcomes": {
+            "accepted_seeds": poisson_report["accepted_seeds"],
+            "rejected_seeds": poisson_report["rejected_seeds"],
+        },
+        "lid_cavity_ns_outcomes": {
+            "accepted_seeds": ns_report["accepted_seeds"],
+            "rejected_seeds": ns_report["rejected_seeds"],
+        },
         "wiki_candidate": wiki.model_dump(mode="json"),
         "skill_candidate": skill.model_dump(mode="json"),
         "contradicting_evidence_refs": [
             cross_domain_refs[0].model_dump(mode="json"),
             cross_domain_refs[2].model_dump(mode="json"),
+            cross_domain_refs[4].model_dump(mode="json"),
+            cross_domain_refs[5].model_dump(mode="json"),
         ],
         "promotion": {
             "wiki": "WITHHELD_PENDING_HUMAN_APPROVAL",
@@ -177,11 +251,15 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--thermal-root", type=Path, required=True)
     parser.add_argument("--burgers-root", type=Path, required=True)
+    parser.add_argument("--poisson-root", type=Path, required=True)
+    parser.add_argument("--ns-root", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     generate(
         thermal_root=args.thermal_root,
         burgers_root=args.burgers_root,
+        poisson_root=args.poisson_root,
+        ns_root=args.ns_root,
         output=args.output,
     )
 

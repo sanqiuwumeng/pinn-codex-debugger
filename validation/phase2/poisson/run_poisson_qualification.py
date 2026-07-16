@@ -71,7 +71,6 @@ from run_governed_pinn_smoke import (  # noqa: E402
 )
 
 WORKFLOW_ID = "poisson-qualification-20260716"
-SEED = 314159
 EXPECTED_OUTPUTS = (
     "case_contract.json",
     "run_config.json",
@@ -113,9 +112,10 @@ def _write_json(path: Path, payload: Any) -> ArtifactRef:
 
 def _training_environment(training_python: Path) -> dict[str, Any]:
     probe = (
-        "import json,sys,torch;"
+        "import json,sys,numpy,torch;"
         "print(json.dumps({'python':sys.version.split()[0],"
         "'executable':sys.executable,'torch':torch.__version__,"
+        "'numpy':numpy.__version__,"
         "'cuda_available':torch.cuda.is_available()},sort_keys=True))"
     )
     completed = subprocess.run(
@@ -126,10 +126,14 @@ def _training_environment(training_python: Path) -> dict[str, Any]:
         encoding="utf-8",
     )
     environment = json.loads(completed.stdout)
-    if environment["python"] != "3.11.11" or not environment["torch"].startswith(
-        "2.3.1"
+    if (
+        environment["python"] != "3.11.11"
+        or not environment["torch"].startswith("2.3.1")
+        or environment["numpy"] != "2.2.5"
     ):
-        raise RuntimeError("Poisson qualification requires Python 3.11.11 and torch 2.3.1")
+        raise RuntimeError(
+            "Poisson qualification requires Python 3.11.11, torch 2.3.1 and NumPy 2.2.5"
+        )
     return environment
 
 
@@ -299,6 +303,7 @@ def _manifest(
     run_name: str,
     mode: str,
     sampler: str,
+    seed: int,
     focus: tuple[float, float],
 ) -> RunManifest:
     command = (
@@ -309,7 +314,7 @@ def _manifest(
         "--sampler",
         sampler,
         "--seed",
-        str(SEED),
+        str(seed),
         "--focus-x",
         str(focus[0]),
         "--focus-y",
@@ -322,10 +327,10 @@ def _manifest(
         str(output_directory),
     )
     return RunManifest(
-        run_id=f"poisson-{run_name}-20260716",
+        run_id=f"poisson-{run_name}-seed-{seed}-20260717",
         workflow_id=WORKFLOW_ID,
-        experiment_id=f"poisson-{run_name}-experiment-20260716",
-        idempotency_key=f"poisson-{run_name}-seed-{SEED}-20260716",
+        experiment_id=f"poisson-{run_name}-seed-{seed}-experiment-20260717",
+        idempotency_key=f"poisson-{run_name}-seed-{seed}-20260717",
         environment_name="pytorch2.3.1",
         interpreter=str(training_python),
         working_directory=str(worker.parent),
@@ -349,6 +354,7 @@ def _run_stage(
     run_name: str,
     mode: str,
     sampler: str,
+    seed: int,
     focus: tuple[float, float],
 ):
     output_directory = root / "outputs" / run_name
@@ -359,6 +365,7 @@ def _run_stage(
         run_name=run_name,
         mode=mode,
         sampler=sampler,
+        seed=seed,
         focus=focus,
     )
     backend_root = root / "backend" / run_name
@@ -459,7 +466,7 @@ def _replay(
 
 
 def execute(
-    *, training_python: Path, output_root: Path, metric_approval_path: Path
+    *, training_python: Path, output_root: Path, metric_approval_path: Path, seed: int
 ) -> None:
     training_python = training_python.resolve(strict=True)
     output_root = output_root.resolve(strict=False)
@@ -512,6 +519,7 @@ def execute(
         run_name="uniform-smoke",
         mode="smoke",
         sampler="uniform",
+        seed=seed,
         focus=(0.5, 0.5),
     )
     baseline = _run_stage(
@@ -524,6 +532,7 @@ def execute(
         run_name="uniform-full",
         mode="full",
         sampler="uniform",
+        seed=seed,
         focus=(0.5, 0.5),
     )
     baseline_field, baseline_reference = _field(
@@ -558,6 +567,7 @@ def execute(
         run_name="focused-smoke",
         mode="smoke",
         sampler="focused",
+        seed=seed,
         focus=focus,
     )
     smoke_field, smoke_reference = _field(
@@ -587,6 +597,7 @@ def execute(
         run_name="focused-full",
         mode="full",
         sampler="focused",
+        seed=seed,
         focus=focus,
     )
     candidate_field, candidate_reference = _field(
@@ -677,12 +688,15 @@ def execute(
             source_snapshot_ref=source_ref,
             dataset_refs=(candidate[1].artifacts["aligned_fields.json"],),
             environment_ref=environment_ref,
-            random_seed=SEED,
+            random_seed=seed,
         ),
     )
     validation_ref = _write_json(
         evidence / "validation.json", validation.model_dump(mode="json")
     )
+    integrity_checks = {
+        key: value for key, value in validation.checks.items() if key != "metric_decision"
+    }
     manifests = (
         uniform_smoke[0],
         baseline[0],
@@ -709,6 +723,7 @@ def execute(
     report = {
         "workflow_id": WORKFLOW_ID,
         "case_id": "poisson-manufactured-unit-square-v1",
+        "seed": seed,
         "environment": environment,
         "audit": {
             "physical_status": physical.status.value,
@@ -741,6 +756,10 @@ def execute(
         "comparison": comparison.model_dump(mode="json"),
         "decision": decision.model_dump(mode="json"),
         "validation": validation.model_dump(mode="json"),
+        "evidence_integrity": {
+            "status": "PASS" if all(integrity_checks.values()) else "FAIL",
+            "checks": integrity_checks,
+        },
         "replay": replay,
         "provenance": {
             "status": "PASS" if provenance_valid else "FAIL",
@@ -775,7 +794,7 @@ def execute(
         basis.ready,
         smoke_valid,
         comparison.status is ResultStatus.VALID,
-        validation.status is ResultStatus.VALID,
+        all(integrity_checks.values()),
         replay["status"] == "PASS",
         provenance_valid,
         not violations,
@@ -802,11 +821,13 @@ def main() -> None:
     parser.add_argument("--training-python", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--metric-approval", type=Path, required=True)
+    parser.add_argument("--seed", type=int, required=True)
     args = parser.parse_args()
     execute(
         training_python=args.training_python,
         output_root=args.output_root,
         metric_approval_path=args.metric_approval,
+        seed=args.seed,
     )
 
 
