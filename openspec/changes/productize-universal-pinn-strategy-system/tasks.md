@@ -44,12 +44,12 @@
 
 ## 6. Operator CLI
 
-- [ ] 6.1 Add the `pinn-strategy` entry point without adding a new package dependency.
-- [ ] 6.2 Implement `audit` and `plan` from explicit case contracts with persisted `NEEDS_*` outcomes.
-- [ ] 6.3 Implement `smoke`, `full`, `status` and `replay` as thin application-service clients.
-- [ ] 6.4 Implement `rag rebuild` and `rag query` with active-index provenance and conflict visibility.
-- [ ] 6.5 Add versioned `--json` output, stable exit codes, absolute-path normalization and credential-safe errors.
-- [ ] 6.6 Prove the CLI cannot bypass physical, metric, approval, smoke-first, reproducibility or promotion gates.
+- [x] 6.1 Add the `pinn-strategy` entry point without adding a new package dependency.
+- [x] 6.2 Implement `audit` and `plan` from explicit case contracts with persisted `NEEDS_*` outcomes.
+- [x] 6.3 Implement `smoke`, `full`, `status` and `replay` as thin application-service clients.
+- [x] 6.4 Implement `rag rebuild` and `rag query` with active-index provenance and conflict visibility.
+- [x] 6.5 Add versioned `--json` output, stable exit codes, absolute-path normalization and credential-safe errors.
+- [x] 6.6 Prove the CLI cannot bypass physical, metric, approval, smoke-first, reproducibility or promotion gates.
 
 ## 7. Cross-Domain Scientific Qualification
 

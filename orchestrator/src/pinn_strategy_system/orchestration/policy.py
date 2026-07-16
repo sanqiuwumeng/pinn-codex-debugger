@@ -108,6 +108,9 @@ def route_workflow(state: WorkflowState) -> str:
     if request.intent is WorkflowIntent.READ_ONLY:
         return "completed"
 
+    if state.get("experiment_spec") is None:
+        return "experiment_evidence"
+
     experiment_approval = _latest_approval(state, ApprovalKind.EXPERIMENT)
     if experiment_approval is None:
         return "experiment_approval"

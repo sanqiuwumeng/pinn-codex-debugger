@@ -21,5 +21,8 @@ dependencies = [
   "psutil==7.2.2",
 ]
 
+[project.scripts]
+pinn-strategy = "pinn_strategy_system.cli:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]

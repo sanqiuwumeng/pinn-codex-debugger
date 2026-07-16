@@ -66,6 +66,13 @@ def build_phase0_graph(checkpointer: Any):
     )
     _add_interrupt_path(
         builder,
+        route="experiment_evidence",
+        stage=WorkflowStage.NEEDS_EXPERIMENT_EVIDENCE,
+        reason="A complete single-intervention experiment specification is required.",
+        collector=_collect_experiment_spec,
+    )
+    _add_interrupt_path(
+        builder,
         route="experiment_approval",
         stage=WorkflowStage.NEEDS_EXPERIMENT_APPROVAL,
         reason="Smoke execution requires a scoped experiment approval.",
@@ -114,6 +121,7 @@ def build_phase0_graph(checkpointer: Any):
         "unit_warning": "prepare_unit_warning",
         "metric_priority": "prepare_metric_priority",
         "diagnostic_evidence": "prepare_diagnostic_evidence",
+        "experiment_evidence": "prepare_experiment_evidence",
         "experiment_approval": "prepare_experiment_approval",
         "full_run_approval": "prepare_full_run_approval",
         **{name: name for name in terminal_nodes},
@@ -215,6 +223,24 @@ def _collect_model_evaluation(state: WorkflowState) -> dict[str, Any]:
     return {
         "model_evaluation": report.model_dump(mode="json"),
         "completed_nodes": _mark_completed(state, "collect:model_evaluation"),
+    }
+
+
+def _collect_experiment_spec(state: WorkflowState) -> dict[str, Any]:
+    response = _require_mapping(
+        interrupt(
+            _interrupt_payload(
+                state,
+                WorkflowStage.NEEDS_EXPERIMENT_EVIDENCE,
+            )
+        )
+    )
+    specification = ExperimentSpec.model_validate(
+        _require_field(response, "experiment_spec")
+    )
+    return {
+        "experiment_spec": specification.model_dump(mode="json"),
+        "completed_nodes": _mark_completed(state, "collect:experiment_spec"),
     }
 
 

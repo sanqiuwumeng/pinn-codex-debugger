@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import subprocess
+import threading
 import time
 import uuid
 from dataclasses import dataclass
@@ -97,7 +98,6 @@ class _RunPaths:
 class LocalProcessRunnerBackend:
     def __init__(self, config: LocalProcessBackendConfig) -> None:
         self._config = config
-        self._local_launcher_handles: dict[str, subprocess.Popen] = {}
 
     def prepare(self, request: ExecutionRequest) -> PreparedRun:
         manifest = request.manifest
@@ -183,7 +183,11 @@ class LocalProcessRunnerBackend:
             "create_time": psutil.Process(process.pid).create_time(),
             "recorded_at": _now(),
         }
-        self._local_launcher_handles[prepared_run.backend_ref.run_id] = process
+        threading.Thread(
+            target=process.wait,
+            name=f"local-launcher-reaper-{prepared_run.backend_ref.run_id}",
+            daemon=True,
+        ).start()
         _write_json_exclusive(paths.launcher_identity, identity)
         return prepared_run.backend_ref
 
@@ -221,7 +225,6 @@ class LocalProcessRunnerBackend:
             "required_artifacts_present": not missing,
         }
         exit_code = None if event is None else event.get("exit_code")
-        self._reap_local_launcher(backend_ref.run_id)
         return BackendRunStatus(
             backend_ref=backend_ref,
             phase=phase,
@@ -266,7 +269,6 @@ class LocalProcessRunnerBackend:
                 timeout_seconds=self._config.cancellation_timeout_seconds,
             )
         still_live = any(_identity_is_live(identity) for identity in identities)
-        self._reap_local_launcher(backend_ref.run_id, wait=True)
         stop_confirmed = bool(identities) and not still_live
         phase = (
             BackendRunPhase.CANCELLED
@@ -441,20 +443,6 @@ class LocalProcessRunnerBackend:
             stdout=root / "stdout.log",
             stderr=root / "stderr.log",
         )
-
-    def _reap_local_launcher(self, run_id: str, *, wait: bool = False) -> None:
-        process = self._local_launcher_handles.get(run_id)
-        if process is None:
-            return
-        if wait:
-            try:
-                process.wait(timeout=self._config.cancellation_timeout_seconds)
-            except subprocess.TimeoutExpired:
-                return
-        elif process.poll() is None:
-            return
-        self._local_launcher_handles.pop(run_id, None)
-
 
 def _validate_local_manifest(manifest: RunManifest) -> None:
     working_directory = Path(manifest.working_directory)
