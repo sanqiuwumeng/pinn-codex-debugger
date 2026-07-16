@@ -55,7 +55,7 @@
 
 - [x] 7.1 Freeze three or more seeds for the existing thermal focused-collocation case while preserving its case-specific `max_abs -> RMSE` and MAE guardrails.
 - [x] 7.2 Report per-seed metrics, localized maxima, failure modes and aggregate uncertainty without hiding rejected seeds.
-- [x] 7.3 Implement the classic viscous Burgers PINN, an independently converged high-resolution numerical test reference and a Burgers domain provider; retain Poisson only as a semantic-isolation regression fixture.
+- [x] 7.3 Implement the classic viscous Burgers PINN, an independently converged high-resolution numerical test reference and a Burgers domain provider; preserve the existing Poisson worker/provider as the foundation for its peer-case qualification.
 - [x] 7.4 Complete Burgers audit, user-confirmed `relative_l2 -> max_abs` contract, baseline diagnosis, single-intervention smoke, at least three predeclared full seeds, localized analysis, replay and provenance validation without hiding rejected seeds.
 - [x] 7.5 Prove Burgers contracts and reports contain no implicit heat-transfer units, regions, phase-change or FEM-default semantics, and prove the numerical test reference passes its declared convergence gate.
 - [x] 7.6 Compare evidence across cases and create only governed Wiki/Skill candidates supported by repeated validated patterns.
@@ -67,3 +67,13 @@
 - [x] 8.3 Run credential, absolute-path, no-global-state, no-thermal-import and artifact-provenance audits.
 - [x] 8.4 Produce a Phase 2 evidence report with baseline commit, environment manifests, model revisions, backend results and scientific boundaries.
 - [x] 8.5 Mark this OpenSpec complete only when every release gate passes and no mandatory work remains.
+
+## 9. Peer-Case Scientific Validation Extension
+
+- [x] 9.1 Record the user's correction that Poisson, Burgers, lid-driven-cavity Navier-Stokes and 2D heat transfer are peer scientific validation cases with no primary/secondary hierarchy.
+- [ ] 9.2 Promote the existing Poisson implementation to the same governed multi-seed scientific lifecycle and retain all accepted and rejected outcomes.
+- [ ] 9.3 Implement an independent `Re=100` lid-driven-cavity CFD reference with grid-convergence evidence and Ghia centerline cross-validation.
+- [ ] 9.4 Implement the multi-output `u,v,p` NS PINN worker and a physically isolated NS domain metric provider with gauge-invariant pressure handling.
+- [ ] 9.5 Complete NS audit, approved metric contract, baseline localization, single-intervention smoke, at least three predeclared full seeds, localized analysis, replay and provenance validation.
+- [ ] 9.6 Replace hierarchical cross-case wording with a peer case-by-capability evidence matrix and regenerate governed Wiki/Skill candidates without automatic publication.
+- [ ] 9.7 Run full engineering, scientific, credential, semantic-isolation and artifact-provenance release gates, then issue a superseding evidence report and close this extension only if no mandatory task remains.
