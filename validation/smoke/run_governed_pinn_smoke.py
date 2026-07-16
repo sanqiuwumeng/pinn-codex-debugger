@@ -315,6 +315,7 @@ def _run_one(
     audit: AppendOnlyAuditStore,
     output_directory: Path,
     collection_directory: Path,
+    expected_outputs: tuple[str, ...] = EXPECTED_OUTPUTS,
 ) -> CompletedRun:
     events: list[RunEvent] = [
         _event(
@@ -404,7 +405,7 @@ def _run_one(
         artifact_directory = collection_directory
 
     artifacts: dict[str, ArtifactRef] = {}
-    for relative in EXPECTED_OUTPUTS:
+    for relative in expected_outputs:
         path = artifact_directory / Path(relative)
         if path.exists():
             key = relative.replace("/", "_")
@@ -483,7 +484,7 @@ def _run_one(
 
     required_ids = tuple(
         f"{manifest.run_id}-{name.replace('/', '_')}"
-        for name in EXPECTED_OUTPUTS
+        for name in expected_outputs
     )
     monitoring = EventMonitor().evaluate(
         report_id=f"{manifest.run_id}-monitoring",
