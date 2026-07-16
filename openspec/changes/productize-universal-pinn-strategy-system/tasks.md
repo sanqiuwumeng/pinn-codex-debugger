@@ -5,7 +5,7 @@
 - [x] 1.3 Inventory every uncommitted path and classify it as source, test, governed evidence, large artifact, derived runtime state, backup or credential-risk data.
 - [x] 1.4 Back up every existing file before modifying release metadata or implementation.
 - [x] 1.5 Add narrowly scoped ignore rules without deleting local evidence, then generate a tracked evidence manifest for excluded authoritative artifacts.
-- [ ] 1.6 Run the complete Phase 1 release gates and credential scan, create a selective baseline commit, and record the commit identity.
+- [x] 1.6 Run the complete Phase 1 release gates and credential scan, create a selective baseline commit, and record the commit identity.
 
 ## 2. Production Execution Contracts
 
