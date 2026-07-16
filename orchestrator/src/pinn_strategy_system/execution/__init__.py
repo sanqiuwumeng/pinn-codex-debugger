@@ -1,5 +1,6 @@
 """Read-only execution services and explicit external adapters."""
 
+from .local_process import LocalProcessBackendConfig, LocalProcessRunnerBackend
 from .prediction import FieldData, PredictionAnalyzer
 from .process_monitor import (
     ApprovedProcessIdentity,
@@ -23,6 +24,8 @@ __all__ = [
     "ApprovedProcessSampler",
     "ExecutionBackend",
     "IdempotencyConflictError",
+    "LocalProcessBackendConfig",
+    "LocalProcessRunnerBackend",
     "ManifestFirstRunner",
     "McpReadOnlyRetrievalProvider",
     "PredictionAnalyzer",

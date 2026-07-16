@@ -102,6 +102,23 @@ class EventMonitorTests(unittest.TestCase):
         self.assertTrue(any("NAN_DETECTED" in item for item in report.reasons))
         self.assertTrue(any("upper bound" in item for item in report.reasons))
 
+    def test_nan_and_gpu_oom_events_are_both_preserved(self) -> None:
+        report = self.monitor.evaluate(
+            report_id="critical-events",
+            run_id="run-1",
+            events=(
+                event("start", RunEventType.RUN_STARTED, 0),
+                event("nan", RunEventType.NAN_DETECTED, 1),
+                event("oom", RunEventType.GPU_OOM, 2),
+            ),
+            policy=policy(),
+            now=START + timedelta(seconds=3),
+        )
+
+        self.assertEqual(report.outcome, MonitorOutcome.ANOMALY)
+        self.assertTrue(any("NAN_DETECTED" in item for item in report.reasons))
+        self.assertTrue(any("GPU_OOM" in item for item in report.reasons))
+
     def test_stalled_event_stream_is_anomaly(self) -> None:
         report = self.monitor.evaluate(
             report_id="stalled",
