@@ -61,8 +61,8 @@ from read_only_pinn_case import run_case  # noqa: E402
 from run_governed_pinn_smoke import (  # noqa: E402
     EXPECTED_OUTPUTS,
     ForbiddenReplayBackend,
-    LocalObservedBackend,
     _artifact,
+    _build_local_backend,
     _environment_manifest,
     _run_one,
     _sha256,
@@ -201,8 +201,10 @@ def execute(*, case_root: Path, training_python: Path, output_root: Path) -> Non
     )
     artifact_store = LocalArtifactStore(layout.artifact_root)
     audit = AppendOnlyAuditStore(layout.audit_database)
-    log_root = output_root / "run_logs"
-    log_root.mkdir()
+    backend_run_root = output_root / "backend-runs"
+    backend_run_root.mkdir()
+    collection_root = output_root / "collected-runs"
+    collection_root.mkdir()
 
     source_ref = artifact_store.put_json(
         "source-snapshot",
@@ -341,14 +343,14 @@ def execute(*, case_root: Path, training_python: Path, output_root: Path) -> Non
     registry = SQLiteRunRegistry(
         layout.tracking_database.parent / "launch_registry.sqlite3"
     )
-    backend = LocalObservedBackend(log_root)
+    backend = _build_local_backend(backend_run_root)
     completed_run = _run_one(
         manifest=manifest,
         approval=experiment_approval,
         runner=ManifestFirstRunner(registry, backend),
-        backend=backend,
         audit=audit,
         output_directory=workspace / "outputs" / OUTPUT_TAG,
+        collection_directory=collection_root / RUN_ID,
     )
     if completed_run.exit_code != 0:
         raise RuntimeError("full process failed; evidence was preserved")

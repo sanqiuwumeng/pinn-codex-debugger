@@ -21,7 +21,7 @@
 - [x] 3.2 Validate PID plus process creation identity and reconcile it with status, exit code, heartbeat and required artifacts.
 - [x] 3.3 Implement approved process-tree cancellation and idempotent collection with SHA-256 manifests.
 - [x] 3.4 Add tests for success, non-zero exit, NaN/OOM event, stale heartbeat, PID reuse, launch timeout, duplicate submit, cancel and interrupted collection.
-- [ ] 3.5 Move governed smoke/full adapters onto the production local backend and remove duplicated validation-only launch control.
+- [x] 3.5 Move governed smoke/full adapters onto the production local backend and remove duplicated validation-only launch control.
 
 ## 4. AutoDL SSH Backend
 

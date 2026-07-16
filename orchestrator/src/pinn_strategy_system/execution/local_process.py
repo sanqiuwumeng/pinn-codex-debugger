@@ -194,9 +194,8 @@ class LocalProcessRunnerBackend:
         )
         _validate_backend_ref(request.manifest, backend_ref)
         event = _latest_json(paths.status_events)
-        identity = _read_identity(paths.process_identity)
-        if identity is None:
-            identity = _read_identity(paths.launcher_identity)
+        target_identity = _read_identity(paths.process_identity)
+        identity = target_identity or _read_identity(paths.launcher_identity)
         process_matches = _identity_is_live(identity)
         heartbeat_at = _latest_event_time(paths.heartbeats)
         produced = _produced_artifacts(request.manifest)
@@ -218,7 +217,7 @@ class LocalProcessRunnerBackend:
         )
         checks = {
             "status_event_valid": event is not None,
-            "process_identity_recorded": identity is not None,
+            "process_identity_recorded": target_identity is not None,
             "required_artifacts_present": not missing,
         }
         exit_code = None if event is None else event.get("exit_code")

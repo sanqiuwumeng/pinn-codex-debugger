@@ -22,8 +22,6 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlparse
 
-import psutil
-
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 ORCHESTRATOR_SRC = REPOSITORY_ROOT / "orchestrator" / "src"
 CASE_ADAPTER_ROOT = REPOSITORY_ROOT / "validation" / "cases"
@@ -41,6 +39,7 @@ from pinn_strategy_system.contracts import (  # noqa: E402
     ApprovalRecord,
     ArtifactCollectionReport,
     ArtifactCollectionSpec,
+    ArtifactCollectionStatus,
     ArtifactRef,
     AuditStatus,
     BackendRunPhase,
@@ -75,7 +74,10 @@ from pinn_strategy_system.execution import (  # noqa: E402
     ApprovedProcessIdentity,
     ApprovedProcessSampler,
     ExecutionBackend,
+    LocalProcessBackendConfig,
+    LocalProcessRunnerBackend,
     ManifestFirstRunner,
+    ProcessUnavailableError,
     SQLiteRunRegistry,
 )
 from pinn_strategy_system.orchestration import build_phase0_graph  # noqa: E402
@@ -190,105 +192,57 @@ def _environment_manifest(training_python: Path) -> dict[str, Any]:
     return payload
 
 
-def _backend_phase(exit_code: int | None) -> BackendRunPhase:
-    if exit_code is None:
-        return BackendRunPhase.RUNNING
-    terminal_phases = {0: BackendRunPhase.COMPLETED}
-    return terminal_phases.get(exit_code, BackendRunPhase.FAILED)
+def _local_execution_environment() -> tuple[tuple[str, str], ...]:
+    allowed_names = (
+        "APPDATA",
+        "COMSPEC",
+        "CUDA_DEVICE_ORDER",
+        "CUDA_PATH",
+        "CUDA_VISIBLE_DEVICES",
+        "HOME",
+        "KMP_DUPLICATE_LIB_OK",
+        "LD_LIBRARY_PATH",
+        "LOCALAPPDATA",
+        "MKL_NUM_THREADS",
+        "MPLCONFIGDIR",
+        "NVIDIA_VISIBLE_DEVICES",
+        "OMP_NUM_THREADS",
+        "PATH",
+        "PATHEXT",
+        "PROGRAMDATA",
+        "PYTHONHASHSEED",
+        "PYTHONUTF8",
+        "SYSTEMROOT",
+        "TEMP",
+        "TMP",
+        "TORCH_HOME",
+        "USERPROFILE",
+        "WINDIR",
+        "XDG_CACHE_HOME",
+    )
+    environment = tuple(
+        (name, os.environ[name])
+        for name in allowed_names
+        if name in os.environ
+    )
+    if "PYTHONUTF8" not in {name for name, _ in environment}:
+        environment += (("PYTHONUTF8", "1"),)
+    return environment
 
 
-class LocalObservedBackend(ExecutionBackend):
-    """Case-local backend; the universal runner remains backend-agnostic."""
-
-    def __init__(self, log_root: Path) -> None:
-        self._log_root = log_root
-        self.processes: dict[str, subprocess.Popen[bytes]] = {}
-        self._streams: dict[str, tuple[Any, Any]] = {}
-        self._create_times: dict[str, float] = {}
-
-    def prepare(self, request: ExecutionRequest) -> PreparedRun:
-        manifest = request.manifest
-        return PreparedRun(
-            request=request,
-            backend_ref=BackendRunRef(
-                backend_id="validation-local-observed",
-                run_id=manifest.run_id,
-                idempotency_key=manifest.idempotency_key,
-                reference=f"validation-local://{manifest.run_id}",
-            ),
-            staging_root=manifest.working_directory,
-            prepared_at=datetime.now(UTC),
+def _build_local_backend(run_root: Path) -> LocalProcessRunnerBackend:
+    environment = _local_execution_environment()
+    return LocalProcessRunnerBackend(
+        LocalProcessBackendConfig(
+            run_root=run_root,
+            launcher_interpreter=Path(sys.executable).resolve(strict=True),
+            environment=environment,
+            environment_allowlist=tuple(name for name, _ in environment),
+            heartbeat_interval_seconds=0.5,
+            heartbeat_stale_after_seconds=10.0,
+            cancellation_timeout_seconds=10.0,
         )
-
-    def launch(self, prepared_run: PreparedRun) -> BackendRunRef:
-        manifest = prepared_run.request.manifest
-        stdout_path = self._log_root / f"{manifest.run_id}.stdout.log"
-        stderr_path = self._log_root / f"{manifest.run_id}.stderr.log"
-        stdout_stream = stdout_path.open("xb")
-        stderr_stream = stderr_path.open("xb")
-        creationflags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
-        try:
-            process = subprocess.Popen(
-                manifest.command,
-                cwd=manifest.working_directory,
-                stdout=stdout_stream,
-                stderr=stderr_stream,
-                creationflags=creationflags,
-            )
-        except Exception:
-            stdout_stream.close()
-            stderr_stream.close()
-            raise
-        self.processes[manifest.run_id] = process
-        self._streams[manifest.run_id] = (stdout_stream, stderr_stream)
-        self._create_times[manifest.run_id] = psutil.Process(process.pid).create_time()
-        return prepared_run.backend_ref
-
-    def reconcile(self, backend_ref: BackendRunRef) -> BackendRunStatus:
-        process = self.processes[backend_ref.run_id]
-        exit_code = process.poll()
-        return BackendRunStatus(
-            backend_ref=backend_ref,
-            phase=_backend_phase(exit_code),
-            observed_at=datetime.now(UTC),
-            process_id=process.pid,
-            process_create_time=self._create_times[backend_ref.run_id],
-            exit_code=exit_code,
-            checks={"process_identity": True},
-        )
-
-    def cancel(
-        self,
-        backend_ref: BackendRunRef,
-        request: RunCancellationRequest,
-    ) -> BackendRunStatus:
-        process = self.processes[backend_ref.run_id]
-        process.terminate()
-        return BackendRunStatus(
-            backend_ref=backend_ref,
-            phase=BackendRunPhase.CANCELLING,
-            observed_at=datetime.now(UTC),
-            process_id=process.pid,
-            process_create_time=self._create_times[backend_ref.run_id],
-            checks={"approval": request.approval.approval_id != ""},
-        )
-
-    def collect(
-        self,
-        backend_ref: BackendRunRef,
-        spec: ArtifactCollectionSpec,
-    ) -> ArtifactCollectionReport:
-        raise NotImplementedError(
-            "validation adapter artifact collection is replaced in Phase 2 task 3.5"
-        )
-
-    def wait(self, run_id: str) -> int:
-        process = self.processes[run_id]
-        return_code = process.wait()
-        streams = self._streams.pop(run_id)
-        for stream in streams:
-            stream.close()
-        return return_code
+    )
 
 
 class ForbiddenReplayBackend(ExecutionBackend):
@@ -358,9 +312,9 @@ def _run_one(
     manifest: RunManifest,
     approval: ApprovalRecord,
     runner: ManifestFirstRunner,
-    backend: LocalObservedBackend,
     audit: AppendOnlyAuditStore,
     output_directory: Path,
+    collection_directory: Path,
 ) -> CompletedRun:
     events: list[RunEvent] = [
         _event(
@@ -370,49 +324,103 @@ def _run_one(
         )
     ]
     submission = runner.submit(manifest, approval)
-    process = backend.processes[manifest.run_id]
-    identity = ApprovedProcessIdentity(
-        run_id=manifest.run_id,
-        pid=process.pid,
-        expected_create_time=psutil.Process(process.pid).create_time(),
-        approval_id=approval.approval_id,
-    )
-    sampler = ApprovedProcessSampler((identity,))
-    events.append(
-        _event(
-            event_id=f"{manifest.run_id}-started",
-            run_id=manifest.run_id,
-            event_type=RunEventType.RUN_STARTED,
-            payload={"pid": process.pid, "approval_id": approval.approval_id},
-        )
-    )
+    sampler: ApprovedProcessSampler | None = None
+    startup_deadline = time.monotonic() + 30.0
     sample_index = 0
-    while process.poll() is None:
-        events.append(
-            sampler.capture(
-                event_id=f"{manifest.run_id}-resource-{sample_index}",
+    terminal = (
+        BackendRunPhase.COMPLETED,
+        BackendRunPhase.FAILED,
+        BackendRunPhase.CANCELLED,
+    )
+    while True:
+        submission = runner.reconcile(manifest.idempotency_key)
+        status = submission.last_backend_status
+        if status is None:
+            raise RuntimeError("local backend reconciliation returned no status")
+        if (
+            sampler is None
+            and status.checks.get("process_identity_recorded", False)
+            and status.process_id is not None
+            and status.process_create_time is not None
+        ):
+            identity = ApprovedProcessIdentity(
                 run_id=manifest.run_id,
-                occurred_at=datetime.now(UTC),
+                pid=status.process_id,
+                expected_create_time=status.process_create_time,
+                approval_id=approval.approval_id,
             )
-        )
-        sample_index += 1
+            sampler = ApprovedProcessSampler((identity,))
+            events.append(
+                _event(
+                    event_id=f"{manifest.run_id}-started",
+                    run_id=manifest.run_id,
+                    event_type=RunEventType.RUN_STARTED,
+                    payload={
+                        "pid": status.process_id,
+                        "approval_id": approval.approval_id,
+                    },
+                )
+            )
+        if status.phase in terminal:
+            break
+        if sampler is not None:
+            try:
+                events.append(
+                    sampler.capture(
+                        event_id=(
+                            f"{manifest.run_id}-resource-{sample_index}"
+                        ),
+                        run_id=manifest.run_id,
+                        occurred_at=datetime.now(UTC),
+                    )
+                )
+                sample_index += 1
+            except ProcessUnavailableError:
+                pass
+        elif time.monotonic() > startup_deadline:
+            raise RuntimeError("local backend did not record a target process identity")
         time.sleep(0.5)
-    exit_code = backend.wait(manifest.run_id)
-    submission = runner.reconcile(manifest.idempotency_key)
+    exit_code = status.exit_code if status.exit_code is not None else -1
+
+    artifact_directory = output_directory
+    if status.phase is BackendRunPhase.COMPLETED:
+        if submission.backend_ref is None:
+            raise RuntimeError("completed local run has no backend reference")
+        submission = runner.collect(
+            manifest.idempotency_key,
+            ArtifactCollectionSpec(
+                run_id=manifest.run_id,
+                backend_ref=submission.backend_ref,
+                destination_root=str(collection_directory),
+                required_artifacts=manifest.expected_artifacts,
+            ),
+        )
+        report = submission.collection_report
+        if (
+            report is None
+            or report.status is not ArtifactCollectionStatus.COMPLETE
+        ):
+            raise RuntimeError("local backend artifact collection was not complete")
+        artifact_directory = collection_directory
 
     artifacts: dict[str, ArtifactRef] = {}
     for relative in EXPECTED_OUTPUTS:
-        path = output_directory / Path(relative)
+        path = artifact_directory / Path(relative)
         if path.exists():
             key = relative.replace("/", "_")
             artifacts[relative] = _artifact(f"{manifest.run_id}-{key}", path)
 
-    log_root = Path(backend._log_root)
-    combined_log = "\n".join(
-        (log_root / f"{manifest.run_id}.{stream}.log").read_text(
-            encoding="utf-8", errors="replace"
-        )
+    if submission.prepared_run is None:
+        raise RuntimeError("local run has no prepared-run evidence")
+    run_directory = Path(submission.prepared_run.staging_root)
+    log_paths = tuple(
+        run_directory / f"{stream}.log"
         for stream in ("stdout", "stderr")
+    )
+    combined_log = "\n".join(
+        path.read_text(encoding="utf-8", errors="replace")
+        for path in log_paths
+        if path.is_file()
     )
     lowered = combined_log.lower()
     if "out of memory" in lowered:
@@ -462,10 +470,13 @@ def _run_one(
             run_id=manifest.run_id,
             event_type=(
                 RunEventType.RUN_FINISHED
-                if exit_code == 0
+                if status.phase is BackendRunPhase.COMPLETED
                 else RunEventType.RUN_FAILED
             ),
-            payload={"exit_code": exit_code},
+            payload={
+                "exit_code": exit_code,
+                "backend_phase": status.phase.value,
+            },
             artifacts=tuple(artifacts.values()),
         )
     )
@@ -607,8 +618,10 @@ def execute(*, case_root: Path, training_python: Path, output_root: Path) -> Non
     )
     artifact_store = LocalArtifactStore(layout.artifact_root)
     audit = AppendOnlyAuditStore(layout.audit_database)
-    log_root = output_root / "run_logs"
-    log_root.mkdir()
+    backend_run_root = output_root / "backend-runs"
+    backend_run_root.mkdir()
+    collection_root = output_root / "collected-runs"
+    collection_root.mkdir()
 
     source_manifest = {
         "case_root": str(case_root),
@@ -774,7 +787,7 @@ def execute(*, case_root: Path, training_python: Path, output_root: Path) -> Non
 
     registry_path = layout.tracking_database.parent / "launch_registry.sqlite3"
     registry = SQLiteRunRegistry(registry_path)
-    backend = LocalObservedBackend(log_root)
+    backend = _build_local_backend(backend_run_root)
     runner = ManifestFirstRunner(registry, backend)
     baseline_manifest = _manifest(
         run_id=BASELINE_RUN_ID,
@@ -800,17 +813,17 @@ def execute(*, case_root: Path, training_python: Path, output_root: Path) -> Non
         manifest=baseline_manifest,
         approval=experiment_approval,
         runner=runner,
-        backend=backend,
         audit=audit,
         output_directory=baseline_workspace / "outputs" / BASELINE_TAG,
+        collection_directory=collection_root / BASELINE_RUN_ID,
     )
     candidate_run = _run_one(
         manifest=candidate_manifest,
         approval=experiment_approval,
         runner=runner,
-        backend=backend,
         audit=audit,
         output_directory=candidate_workspace / "outputs" / CANDIDATE_TAG,
+        collection_directory=collection_root / CANDIDATE_RUN_ID,
     )
     if baseline_run.exit_code != 0 or candidate_run.exit_code != 0:
         raise RuntimeError("one or more smoke processes failed")
