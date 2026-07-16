@@ -12,7 +12,7 @@ import sys
 import tarfile
 import time
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -387,7 +387,9 @@ def _reconciled_phase(
     if not process_matches:
         return "RUNNING_UNKNOWN", "recorded remote process identity is not live"
     signal_at = heartbeat["observed_at"] if heartbeat else event["observed_at"]
-    age = (datetime.now(UTC) - datetime.fromisoformat(signal_at)).total_seconds()
+    age = (
+        datetime.now(timezone.utc) - datetime.fromisoformat(signal_at)
+    ).total_seconds()
     if age > stale_after:
         return "RUNNING_UNKNOWN", "remote heartbeat is stale"
     if phase == "PREPARED":
@@ -619,7 +621,7 @@ def _required_path(value: str | None) -> Path:
 
 
 def _now() -> str:
-    return datetime.now(UTC).isoformat()
+    return datetime.now(timezone.utc).isoformat()
 
 
 if __name__ == "__main__":

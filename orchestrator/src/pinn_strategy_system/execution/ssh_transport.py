@@ -30,7 +30,7 @@ import json
 import os
 import shutil
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -53,7 +53,7 @@ if destination.exists() and sha256(destination) == expected:
     print(json.dumps({"status": "reused", "sha256": expected}, sort_keys=True))
     raise SystemExit(0)
 if destination.exists():
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     backup_root = destination.parent / (
         "backups_install_" + now.strftime("%Y%m%d_%H%M%S")
     )
@@ -321,11 +321,11 @@ class SystemOpenSshTransport:
 
 
 def _parse_json_response(stdout: str) -> dict:
-    lines = tuple(line for line in stdout.splitlines() if line.strip())
-    if not lines:
+    encoded = stdout.strip()
+    if not encoded:
         raise SshTransportError("remote operation returned no structured response")
     try:
-        payload = json.loads(lines[-1])
+        payload = json.loads(encoded)
     except json.JSONDecodeError:
         raise SshTransportError("remote operation returned invalid JSON") from None
     if not isinstance(payload, dict):
