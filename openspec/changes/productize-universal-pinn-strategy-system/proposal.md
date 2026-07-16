@@ -11,7 +11,7 @@
 - 在隔离模型进程中实现 `Qwen3EmbeddingProvider` 与 `Qwen3RerankerProvider`，固定已验收的不可变模型 revisions，并通过显式传输契约与编排层通信。
 - 为 Qdrant 派生索引增加版本标识、构建后切换、重建和回滚语义；冲突证据在 rerank 后仍必须进入确定性冲突门禁。
 - 新增 `pinn-strategy` 操作者 CLI，覆盖 `audit`、`plan`、`smoke`、`full`、`status`、`replay` 和 RAG 索引操作；所有命令同时支持人类可读和 JSON 输出。
-- 完成至少三个种子的现有传热案例复核，以及一个真实非传热 Poisson PINN 全流程案例，证明系统结论不是由单个 seed 或单一传热模型支撑。
+- 完成至少三个种子的现有传热案例复核，以及经典黏性 Burgers PINN 的多 seed 全流程案例，证明系统结论不是由单个 seed、单一传热模型或稳态线性 PDE 支撑；二维 Poisson 保留为非传热接口与语义隔离回归案例。
 - 只有重复、有效且来源完整的模式才能生成 Wiki/Skill 候选；发布仍需显式人工批准。
 
 ## Capabilities

@@ -132,11 +132,13 @@ pinn-strategy rag query --case <path> --query <text>
 
 所有路径解析为绝对路径并写入请求契约；不能依赖当前工作目录。默认输出简洁文本，`--json` 输出版本化对象。退出码区分成功、需要用户确认、门禁拒绝、运行失败和内部错误。`full` 只能消费持久化 approval；standing authorization 可以由已有 approval record 满足，但 CLI 不自行生成批准。
 
-## Decision 6: Qualify generality with Poisson before Burgers
+## Decision 6: Qualify generality with Burgers before Navier-Stokes
 
-第一个真实非传热案例选择带 manufactured analytic solution 的二维 Poisson PINN。它成本低、参考对齐明确，能直接暴露通用核心中潜在的温度、时间、相变和 FEM 假设。非线性 Burgers 作为后续扩展，不作为本 change 完成前的强制门禁。
+用户在 2026-07-17 明确修正跨域科学资格验证：二维 Poisson 只能证明非传热接口和语义隔离，不能充分覆盖时间演化、非线性和高梯度区域。Phase 2 的强制非传热科学案例改为经典一维黏性 Burgers 方程；已实现的 Poisson worker/provider 保留为轻量回归证据，不承担主要科学结论。
 
-传热案例至少使用三个 seeds 复核同一单变量 intervention。每个案例拥有自己的 `PhysicalModelAuthority`、`UnitSystemContract`、`ReferenceEvidence` 和用户确认指标契约。Poisson 不继承 K、熔池 ROI 或传热 MAE guardrail。
+Burgers 采用 `u_t + u*u_x - (0.01/pi)*u_xx = 0`、`x in [-1,1]`、`t in [0,1]`、`u(0,x)=-sin(pi*x)` 和齐次 Dirichlet 边界。测试参考由独立高分辨率数值求解器生成并经过网格收敛校验。用户确认其字典序指标为 `relative_l2 -> max_abs`；决策前必须定位 `max_abs` 和高梯度区域，初值/边界为硬约束，PDE residual 与高梯度区域误差作为 guardrail/诊断。
+
+传热和 Burgers 案例都至少使用三个预声明 seeds 复核同一单变量 intervention。每个案例拥有自己的 `PhysicalModelAuthority`、`UnitSystemContract`、`ReferenceEvidence` 和用户确认指标契约。Burgers 不继承传热单位、熔池 ROI 或 MAE guardrail。简单 Navier-Stokes/Taylor-Green vortex 留作后续多通道扩展，不阻断本 change。
 
 ## Failure and Recovery Semantics
 
@@ -162,11 +164,11 @@ pinn-strategy rag query --case <path> --query <text>
 3. AutoDL backend 的只读 preflight、耐久 launch、断线对账和传输校验通过。
 4. Qwen3 provider 在固定 revisions 下重现质量门禁，索引 rebuild/switch/rollback 通过。
 5. CLI 的文本/JSON/退出码/无隐式 cwd/审批门禁通过。
-6. 传热多 seed 和 Poisson 全流程报告通过，各自结论不越界。
+6. 传热多 seed、Burgers 多 seed 和 Poisson 语义隔离回归报告通过，各自结论不越界。
 7. 编排、MCP、OpenSpec、架构隔离和 credential scan 全部通过。
 
 ## Open Questions
 
 - Phase 2 完成后是否增加 Web UI；这不阻断当前 CLI 产品化。
-- Burgers、Navier-Stokes、弹性或波动方程中哪个作为下一个领域 provider；这不阻断 Poisson 门禁。
+- Phase 2 完成后是否用 Taylor-Green vortex 扩展速度、压力和不可压约束的多通道验证；这不阻断 Burgers 门禁。
 - 是否将 artifact store 从文件系统升级为对象存储；当前仍保持显式接口，不在本 change 引入新服务。

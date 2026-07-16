@@ -55,10 +55,10 @@
 
 - [x] 7.1 Freeze three or more seeds for the existing thermal focused-collocation case while preserving its case-specific `max_abs -> RMSE` and MAE guardrails.
 - [x] 7.2 Report per-seed metrics, localized maxima, failure modes and aggregate uncertainty without hiding rejected seeds.
-- [x] 7.3 Implement a real two-dimensional Poisson PINN case with manufactured analytic reference and a non-thermal domain provider.
-- [ ] 7.4 Complete Poisson audit, metric confirmation, baseline diagnosis, single-intervention smoke, full run, localized analysis, replay and provenance validation.
-- [ ] 7.5 Prove Poisson contracts and reports contain no implicit temperature, Kelvin, phase, melt-region or FEM-default semantics.
-- [ ] 7.6 Compare evidence across cases and create only governed Wiki/Skill candidates supported by repeated validated patterns.
+- [x] 7.3 Implement the classic viscous Burgers PINN, an independently converged high-resolution numerical test reference and a Burgers domain provider; retain Poisson only as a semantic-isolation regression fixture.
+- [x] 7.4 Complete Burgers audit, user-confirmed `relative_l2 -> max_abs` contract, baseline diagnosis, single-intervention smoke, at least three predeclared full seeds, localized analysis, replay and provenance validation without hiding rejected seeds.
+- [x] 7.5 Prove Burgers contracts and reports contain no implicit heat-transfer units, regions, phase-change or FEM-default semantics, and prove the numerical test reference passes its declared convergence gate.
+- [x] 7.6 Compare evidence across cases and create only governed Wiki/Skill candidates supported by repeated validated patterns.
 
 ## 8. Closed-Loop Release Qualification
 
