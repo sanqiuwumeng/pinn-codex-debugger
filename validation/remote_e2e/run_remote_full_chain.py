@@ -55,6 +55,10 @@ from run_poisson_qualification import _case_contracts  # noqa: E402
 
 
 PUBLISHED_WIKI_CHUNK = "peer-pinn-localized-collocation-v0001"
+EXPECTED_VALIDATION_BY_DECISION = {
+    "ACCEPT": "RESULT_VALID",
+    "REJECT": "RESULT_INVALID",
+}
 
 
 def _sha256(path: Path) -> str:
@@ -433,6 +437,29 @@ def _assert_rag_results(
         raise RuntimeError("conflicting evidence was incorrectly decision-safe")
 
 
+def _poisson_governance_gates(
+    report: dict[str, Any],
+    semantic_audit: dict[str, Any],
+) -> dict[str, bool]:
+    decision = report["decision"]["status"]
+    expected_validation = EXPECTED_VALIDATION_BY_DECISION.get(decision)
+    return {
+        "baseline": report["baseline"]["status"] == "RESULT_VALID",
+        "comparison": report["comparison"]["status"] == "RESULT_VALID",
+        "smoke": report["smoke"]["status"] == "PASS",
+        "decision_terminal": expected_validation is not None,
+        "validation_consistent": (
+            expected_validation is not None
+            and report["validation"]["status"] == expected_validation
+        ),
+        "evidence_integrity": report["evidence_integrity"]["status"] == "PASS",
+        "replay": report["replay"]["status"] == "PASS",
+        "provenance": report["provenance"]["status"] == "PASS",
+        "worker_unchanged": bool(report["provenance"]["worker_unchanged"]),
+        "semantic_isolation": semantic_audit["status"] == "PASS",
+    }
+
+
 def _scan_result_credentials(result_root: Path) -> None:
     patterns = (
         re.compile(r"-----BEGIN (?:OPENSSH|RSA|EC|DSA) PRIVATE KEY-----"),
@@ -809,12 +836,12 @@ def execute(args: argparse.Namespace) -> None:
     poisson_summary = _json_stdout(poisson)
     poisson_report_path = Path(poisson_summary["report"]).resolve(strict=True)
     poisson_report = json.loads(poisson_report_path.read_text(encoding="utf-8"))
-    required = {
-        "validation": poisson_report["validation"]["status"] == "RESULT_VALID",
-        "replay": poisson_report["replay"]["status"] == "PASS",
-        "semantic_isolation": poisson_report["semantic_isolation"]["status"] == "PASS",
-        "evidence_integrity": poisson_report["evidence_integrity"]["status"] == "PASS",
-    }
+    semantic_audit = json.loads(
+        (poisson_root / "poisson-semantic-isolation-audit.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    required = _poisson_governance_gates(poisson_report, semantic_audit)
     if not all(required.values()):
         raise RuntimeError("Poisson qualification failed a mandatory evidence gate")
 
@@ -845,6 +872,14 @@ def execute(args: argparse.Namespace) -> None:
             "seed": args.seed,
             "decision": poisson_report["decision"]["status"],
             "validation": poisson_report["validation"]["status"],
+            "governance_outcome": (
+                "CANDIDATE_ACCEPTED"
+                if poisson_report["decision"]["status"] == "ACCEPT"
+                else "REJECTION_RETAINED"
+            ),
+            "scientific_improvement_claimed": (
+                poisson_report["decision"]["status"] == "ACCEPT"
+            ),
             "replay": poisson_report["replay"]["status"],
             "report_sha256": _sha256(poisson_report_path),
             "gates": required,

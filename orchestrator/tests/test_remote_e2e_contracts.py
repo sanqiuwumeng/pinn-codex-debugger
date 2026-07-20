@@ -26,6 +26,7 @@ from run_remote_full_chain import (  # noqa: E402
     PUBLISHED_WIKI_CHUNK,
     _assert_rag_results,
     _build_operator_case,
+    _poisson_governance_gates,
     _write_fixture_documents,
 )
 from pinn_strategy_system.retrieval import (  # noqa: E402
@@ -119,6 +120,34 @@ class RemoteEndToEndContractTests(unittest.TestCase):
         _assert_rag_results(
             query_payload=advisory,
             conflict_payload=conflict,
+        )
+
+    def test_rejected_poisson_candidate_is_a_complete_governance_outcome(self) -> None:
+        report = {
+            "baseline": {"status": "RESULT_VALID"},
+            "comparison": {"status": "RESULT_VALID"},
+            "smoke": {"status": "PASS"},
+            "decision": {"status": "REJECT"},
+            "validation": {"status": "RESULT_INVALID"},
+            "evidence_integrity": {"status": "PASS"},
+            "replay": {"status": "PASS"},
+            "provenance": {"status": "PASS", "worker_unchanged": True},
+        }
+
+        gates = _poisson_governance_gates(
+            report,
+            {"status": "PASS"},
+        )
+
+        self.assertTrue(all(gates.values()))
+        report["decision"]["status"] = "NEEDS_EVIDENCE"
+        self.assertFalse(
+            all(
+                _poisson_governance_gates(
+                    report,
+                    {"status": "PASS"},
+                ).values()
+            )
         )
 
     @unittest.skipIf(os.name == "nt", "virtualenv launchers are symlinks on Linux")
