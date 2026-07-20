@@ -7,7 +7,6 @@ import argparse
 import json
 import os
 import re
-import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -41,7 +40,7 @@ def _run(label: str, command: tuple[str, ...], cwd: Path, environment: dict[str,
     }
 
 
-def run(repo_root: Path, python: Path, skip_openspec: bool) -> dict[str, Any]:
+def run(repo_root: Path, python: Path) -> dict[str, Any]:
     root = repo_root.resolve(strict=True)
     interpreter = python.resolve(strict=True)
     if not interpreter.is_file():
@@ -64,48 +63,33 @@ def run(repo_root: Path, python: Path, skip_openspec: bool) -> dict[str, Any]:
         (
             "retrieval-benchmark-contract-tests",
             (py, "-m", "unittest", "discover", "-s", ".", "-t", ".", "-p", "test*.py", "-v"),
-            root / "validation" / "benchmarks",
+            root / "qualification" / "qwen",
         ),
         (
-            "cross-domain-contract-tests",
+            "qualification-contract-tests",
             (
                 py,
                 "-m",
                 "unittest",
-                "validation.phase2.test_cross_domain_knowledge_candidates",
-                "validation.phase2.poisson.test_aggregate_poisson_multiseed",
-                "validation.phase2.poisson.test_qualification_contracts",
+                "qualification.poisson.test_aggregate_poisson_multiseed",
+                "qualification.poisson.test_qualification_contracts",
                 "-v",
             ),
             root,
         ),
         ("dependency-consistency", (py, "-m", "pip", "check"), root),
+        (
+            "repository-security-and-release-layout",
+            (
+                py,
+                str(root / "skills" / "pinn-rag-strategy-system" / "scripts" / "audit_repository.py"),
+                "--repo-root",
+                str(root),
+            ),
+            root,
+        ),
     )
     results = [_run(label, command, cwd, environment) for label, command, cwd in commands]
-    if not skip_openspec:
-        openspec = shutil.which("openspec")
-        if openspec is None:
-            results.append(
-                {
-                    "label": "openspec-strict",
-                    "status": "FAIL",
-                    "exit_code": None,
-                    "duration_seconds": 0.0,
-                    "test_count": 0,
-                    "stdout_lines": 0,
-                    "stderr_lines": 0,
-                    "reason": "openspec executable not found",
-                }
-            )
-        else:
-            results.append(
-                _run(
-                    "openspec-strict",
-                    (openspec, "validate", "--all", "--strict"),
-                    root,
-                    environment,
-                )
-            )
     return {
         "schema_version": "1.0",
         "status": "PASS" if all(item["status"] == "PASS" for item in results) else "FAIL",
@@ -120,11 +104,10 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", type=Path, required=True)
     parser.add_argument("--python", type=Path, required=True)
-    parser.add_argument("--skip-openspec", action="store_true")
     parser.add_argument("--report", type=Path)
     arguments = parser.parse_args()
     try:
-        report = run(arguments.repo_root, arguments.python, arguments.skip_openspec)
+        report = run(arguments.repo_root, arguments.python)
         if arguments.report is not None:
             destination = arguments.report.resolve(strict=False)
             if destination.exists() or not destination.parent.is_dir():

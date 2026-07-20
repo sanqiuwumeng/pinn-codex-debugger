@@ -43,6 +43,7 @@ The operational product is an explicit four-part chain:
 ```text
 read-only MCP diagnosis
   -> manifest-driven project adaptation
+  -> Qwen-backed, provenance-scoped RAG evidence
   -> LangGraph/CLI audit, approval, execution and collection
   -> aligned-field localization, metric decision and immutable evidence
 ```
@@ -53,9 +54,10 @@ coordinate alignment, reports baseline/candidate `max_abs` locations, and only
 then applies the user-confirmed metric policy and guardrails.
 
 See `orchestrator/examples/universal-pinn/README.md` for the actual command and
-data flow. Poisson, Burgers and two-dimensional heat transfer are the current
-peer qualification cases. Lid-driven-cavity Navier-Stokes assets are preserved
-as a deferred, non-gating prototype.
+data flow. The portable release includes Poisson and Burgers scientific
+qualification cases. Heat-transfer and Navier-Stokes projects use the same
+adapter and domain-provider interfaces without bundling machine-specific case
+histories or deferred prototypes.
 
 ## Product Scope
 
@@ -93,8 +95,14 @@ training decisions should still go through normal engineering review.
 |   |-- examples/universal-pinn/
 |   |-- src/pinn_strategy_system/
 |   `-- tests/
-|-- openspec/
-`-- validation/
+|-- qualification/
+|   |-- poisson/
+|   |-- burgers/
+|   |-- qwen/
+|   |-- backends/
+|   `-- remote_e2e/
+|-- retrieval-runtime/
+`-- skills/pinn-rag-strategy-system/
 ```
 
 ## Requirements
@@ -103,6 +111,8 @@ training decisions should still go through normal engineering review.
 - The MCP package has no third-party runtime dependency
 - The orchestration package uses the separately approved
   `pinn_strategy_orchestrator` conda environment
+- PINN qualification workers require the declared PyTorch 2.3.1 / Python
+  3.11.11 training environment
 - UTF-8 capable terminal or MCP client
 
 Use any Python 3.11+ interpreter on the target machine. If your MCP client uses
@@ -141,6 +151,14 @@ must send `initialize`, then `notifications/initialized`, before calling tools.
 Set-Location 'PATH_TO_REPOSITORY\mcp-server'
 python -B smoke_test.py
 ```
+
+## Qualification
+
+Portable scientific and end-to-end qualification entry points live under
+`qualification/`. Poisson and Burgers runs require caller-supplied JSON records
+for both metric-priority approval and experiment approval; no approval is
+embedded in the repository. See `qualification/README.md` for the contracts and
+commands.
 
 ## MCP Tools
 

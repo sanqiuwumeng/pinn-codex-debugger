@@ -27,7 +27,7 @@ Read [references/governance-contract.md](references/governance-contract.md) befo
 
 ### 1. Establish the execution context
 
-- Locate the system repository by requiring `orchestrator/`, `mcp-server/`, `retrieval-runtime/`, `validation/`, and `openspec/`.
+- Locate the system repository by requiring `orchestrator/`, `mcp-server/`, `retrieval-runtime/`, and `qualification/`.
 - Identify the target PINN project, training interpreter, orchestration interpreter, retrieval interpreter, output root, and execution backend.
 - Keep the Python 3.11 orchestration environment separate from the PyTorch training environment and the GPU retrieval environment.
 - Reuse an approved sandbox. If development begins without one, ask whether to create a conda sandbox before modifying files.
@@ -74,6 +74,7 @@ Read [references/governance-contract.md](references/governance-contract.md) befo
 ### 7. Verify transfer and release
 
 - Run `scripts/run_release_gates.py --repo-root <system-repo> --python <orchestration-python>`.
+- Treat the release allowlist enforced by `scripts/audit_repository.py` as mandatory; do not publish development records or machine-local evidence directories.
 - For a transferred full-chain result, run `scripts/verify_completion_bundle.py --result-root <bundle> --expected-commit <git-sha> --expected-source-sha256 <archive-sha>`.
 - Compare commit identity, source-archive hash, manifest hash, exact file set, individual file hashes/sizes, final marker, Wiki/RAG gates, and credential scan before accepting the transfer.
 - Push only a clean reviewed commit. Confirm repository owner, name, visibility, branch, and diff before changing GitHub state.

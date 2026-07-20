@@ -12,21 +12,20 @@ wheelhouse_tmp/
 **/backups/
 **/*_backup_????-??-??*
 
-# Governed experiment outputs remain in the artifact store and are referenced
-# by tracked reports and SHA-256 manifests.
-validation/**/results/
-validation/full/preflight/
-validation/**/*.log
-validation/**/*.sqlite3
-validation/**/*.sqlite3-shm
-validation/**/*.sqlite3-wal
-validation/**/*.pid
-validation/**/*.status
-validation/**/*.npz
-validation/**/*.npy
-validation/**/*.pth
-validation/**/*.pt
-validation/**/*.pkl
-validation/**/*.png
-validation/**/*.gz
-validation/dependencies/*pip-dry-run*.json
+# Governed outputs and machine-local evidence are never release source files.
+**/results/
+**/preflight/
+**/*.log
+**/*.sqlite3
+**/*.sqlite3-shm
+**/*.sqlite3-wal
+**/*.pid
+**/*.status
+**/*.npz
+**/*.npy
+**/*.pth
+**/*.pt
+**/*.pkl
+**/*.png
+**/*.gz
+**/*pip-dry-run*.json

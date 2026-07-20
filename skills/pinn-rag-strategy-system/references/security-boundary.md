@@ -31,4 +31,4 @@ The execution layer is not a hostile-code sandbox. It intentionally runs a user-
 
 ## Release rule
 
-A release is acceptable only when repository audit, unit tests, OpenSpec validation, dependency advisory checks, tracked-content secret scanning, Skill validation, and a clean Git diff all pass. A clean scan reduces known risk but does not prove the absence of zero-day vulnerabilities.
+A release is acceptable only when the release-layout allowlist, repository audit, unit tests, dependency checks, tracked-content secret scanning, Skill validation, and a clean Git diff all pass. A clean scan reduces known risk but does not prove the absence of zero-day vulnerabilities.

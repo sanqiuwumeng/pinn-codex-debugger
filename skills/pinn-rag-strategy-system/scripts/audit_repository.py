@@ -18,9 +18,25 @@ REQUIRED_PATHS = (
     "orchestrator/pyproject.toml",
     "mcp-server/pyproject.toml",
     "retrieval-runtime/qwen3_jsonl_gateway.py",
-    "validation/remote_e2e/run_remote_full_chain.py",
-    "openspec",
+    "qualification/remote_e2e/run_remote_full_chain.py",
+    "qualification/poisson/run_poisson_qualification.py",
+    "qualification/burgers/run_burgers_qualification.py",
 )
+
+ALLOWED_ROOT_FILES = {
+    ".gitattributes",
+    ".gitignore",
+    "LICENSE",
+    "README.md",
+    "PINN报错诊断与模块选择手册.md",
+}
+ALLOWED_ROOT_DIRECTORIES = {
+    "mcp-server",
+    "orchestrator",
+    "qualification",
+    "retrieval-runtime",
+    "skills",
+}
 
 CONTENT_RULES = (
     (
@@ -159,6 +175,22 @@ def _dependency_findings(root: Path) -> list[dict[str, Any]]:
     return findings
 
 
+def _release_layout_findings(
+    files: tuple[tuple[str, Path], ...],
+) -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+    for name, _ in files:
+        parts = PurePosixPath(name).parts
+        allowed = (
+            name in ALLOWED_ROOT_FILES
+            if len(parts) == 1
+            else parts[0] in ALLOWED_ROOT_DIRECTORIES
+        )
+        if not allowed:
+            findings.append({"rule": "non-release-path", "path": name})
+    return findings
+
+
 def audit(root: Path) -> dict[str, Any]:
     root = root.resolve(strict=True)
     if not root.is_dir():
@@ -166,7 +198,12 @@ def audit(root: Path) -> dict[str, Any]:
     missing = tuple(item for item in REQUIRED_PATHS if not (root / item).exists())
     files = _tracked_files(root)
     symlinks = tuple(name for name, path in files if path.is_symlink())
-    findings = _content_findings(files) + _ast_findings(files) + _dependency_findings(root)
+    findings = (
+        _content_findings(files)
+        + _ast_findings(files)
+        + _dependency_findings(root)
+        + _release_layout_findings(files)
+    )
     findings.extend({"rule": "tracked-symlink", "path": name} for name in symlinks)
     findings.extend({"rule": "missing-required-path", "path": item} for item in missing)
     return {
@@ -176,6 +213,9 @@ def audit(root: Path) -> dict[str, Any]:
         "tracked_file_count": len(files),
         "checks": {
             "required_layout": not missing,
+            "release_allowlist_enforced": not any(
+                item["rule"] == "non-release-path" for item in findings
+            ),
             "tracked_paths_portable": True,
             "tracked_symlinks_absent": not symlinks,
             "credential_markers_absent": not any(

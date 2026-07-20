@@ -10,19 +10,21 @@ from unittest import mock
 
 SRC = Path(__file__).resolve().parents[1] / "src"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-REMOTE_E2E = REPOSITORY_ROOT / "validation" / "remote_e2e"
-SMOKE_VALIDATION = REPOSITORY_ROOT / "validation" / "smoke"
 sys.path.insert(0, str(SRC))
-sys.path.insert(0, str(REMOTE_E2E))
-sys.path.insert(0, str(SMOKE_VALIDATION))
+sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from pinn_strategy_system.application import (  # noqa: E402
     OperationOutcome,
     OperatorApplicationService,
 )
-from pinn_strategy_system.contracts import WikiPublicationSpec  # noqa: E402
+from pinn_strategy_system.contracts import (  # noqa: E402
+    ApprovalDecision,
+    ApprovalKind,
+    ApprovalRecord,
+    WikiPublicationSpec,
+)
 from pinn_strategy_system.retrieval import FilesystemKnowledgeSource  # noqa: E402
-from run_remote_full_chain import (  # noqa: E402
+from qualification.remote_e2e.run_remote_full_chain import (  # noqa: E402
     PUBLISHED_WIKI_CHUNK,
     _assert_rag_results,
     _build_operator_case,
@@ -35,7 +37,19 @@ from pinn_strategy_system.retrieval import (  # noqa: E402
     QWEN3_RERANKER_MODEL_ID,
     QWEN3_RERANKER_REVISION,
 )
-from run_governed_pinn_smoke import _build_local_backend  # noqa: E402
+from qualification.support import _build_local_backend  # noqa: E402
+
+
+def _approval(kind: ApprovalKind) -> ApprovalRecord:
+    return ApprovalRecord(
+        approval_id=f"remote-test-{kind.value.lower()}",
+        workflow_id="poisson-qualification-v1",
+        kind=kind,
+        decision=ApprovalDecision.APPROVED,
+        approved_by="test-user",
+        approved_at=datetime(2026, 7, 20, 8, 0, tzinfo=UTC),
+        scope="qualification:poisson-qualification-v1",
+    )
 
 
 class RemoteEndToEndContractTests(unittest.TestCase):
@@ -54,6 +68,9 @@ class RemoteEndToEndContractTests(unittest.TestCase):
             repo_commit="a" * 40,
             source_archive_sha256="b" * 64,
             publication=publication,
+            seed=314159,
+            metric_approval=_approval(ApprovalKind.METRIC_PRIORITY),
+            execution_approval=_approval(ApprovalKind.EXPERIMENT),
         )
 
         with tempfile.TemporaryDirectory() as temporary:
