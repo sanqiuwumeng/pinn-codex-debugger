@@ -422,7 +422,7 @@ def _assert_rag_results(
     active = query_payload["data"]["active_index"]
     if active["active"]["embedding_model_id"] != QWEN3_EMBEDDING_MODEL_ID:
         raise RuntimeError("active index embedding model identity mismatch")
-    if active["active"]["embedding_model_revision"] != QWEN3_EMBEDDING_REVISION:
+    if active["active"]["embedding_revision"] != QWEN3_EMBEDDING_REVISION:
         raise RuntimeError("active index embedding revision mismatch")
     conflicts = {
         item["claim_key"] for item in conflict_payload["data"]["conflicts"]

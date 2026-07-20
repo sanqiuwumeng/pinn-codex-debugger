@@ -19,8 +19,16 @@ from pinn_strategy_system.application import (  # noqa: E402
 from pinn_strategy_system.contracts import WikiPublicationSpec  # noqa: E402
 from pinn_strategy_system.retrieval import FilesystemKnowledgeSource  # noqa: E402
 from run_remote_full_chain import (  # noqa: E402
+    PUBLISHED_WIKI_CHUNK,
+    _assert_rag_results,
     _build_operator_case,
     _write_fixture_documents,
+)
+from pinn_strategy_system.retrieval import (  # noqa: E402
+    QWEN3_EMBEDDING_MODEL_ID,
+    QWEN3_EMBEDDING_REVISION,
+    QWEN3_RERANKER_MODEL_ID,
+    QWEN3_RERANKER_REVISION,
 )
 
 
@@ -75,6 +83,37 @@ class RemoteEndToEndContractTests(unittest.TestCase):
         self.assertEqual(
             {item.chunk.metadata.document_type for item in documents},
             {"HANDBOOK"},
+        )
+
+    def test_remote_rag_assertion_uses_production_active_index_schema(self) -> None:
+        advisory = {
+            "outcome": "SUCCESS",
+            "data": {
+                "evidence": [
+                    {
+                        "evidence_id": PUBLISHED_WIKI_CHUNK,
+                        "reranker_model_id": QWEN3_RERANKER_MODEL_ID,
+                        "reranker_model_revision": QWEN3_RERANKER_REVISION,
+                    }
+                ],
+                "active_index": {
+                    "active": {
+                        "embedding_model_id": QWEN3_EMBEDDING_MODEL_ID,
+                        "embedding_revision": QWEN3_EMBEDDING_REVISION,
+                    }
+                },
+            },
+        }
+        conflict = {
+            "data": {
+                "conflicts": [{"claim_key": "radiation_temperature_unit"}],
+                "decision_safe": False,
+            }
+        }
+
+        _assert_rag_results(
+            query_payload=advisory,
+            conflict_payload=conflict,
         )
 
 
