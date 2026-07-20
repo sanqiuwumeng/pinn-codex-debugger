@@ -9,6 +9,8 @@ import tempfile
 import unittest
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from urllib.parse import urlparse
+from urllib.request import url2pathname
 
 from pydantic import ValidationError
 
@@ -50,6 +52,13 @@ def _artifact(root: Path, name: str) -> ArtifactRef:
         media_type="application/json",
         size_bytes=len(content),
     )
+
+
+def _file_uri_path(uri: str) -> Path:
+    parsed = urlparse(uri)
+    if parsed.scheme != "file" or parsed.netloc not in {"", "localhost"}:
+        raise ValueError("expected a local file URI")
+    return Path(url2pathname(parsed.path))
 
 
 def _candidate(root: Path):
@@ -238,7 +247,6 @@ class WikiPublicationTests(unittest.TestCase):
             entry, artifacts = _entry(evidence)
             store = PublishedWikiStore(knowledge)
             first = store.publish(entry)
-            publication_path = Path(first.publication_ref.uri.removeprefix("file:///"))
             original = (knowledge / "wiki" / "localized-pinn-evidence" / "v0001" / "publication.json").read_bytes()
 
             changed_candidate = entry.candidate.model_copy(
@@ -259,7 +267,7 @@ class WikiPublicationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "safe path segment"):
                 store.publish(escaped)
 
-            Path(artifacts["metrics"].uri.removeprefix("file:///")).write_text(
+            _file_uri_path(artifacts["metrics"].uri).write_text(
                 "tampered",
                 encoding="utf-8",
             )
