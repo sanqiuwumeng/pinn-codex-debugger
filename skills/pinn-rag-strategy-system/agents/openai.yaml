@@ -1,0 +1,4 @@
+interface:
+  display_name: "PINN RAG Strategy System"
+  short_description: "Audit and run governed PINN RAG optimization workflows"
+  default_prompt: "Use $pinn-rag-strategy-system to audit and run a governed PINN RAG optimization workflow."
