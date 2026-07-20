@@ -232,10 +232,13 @@ def _local_execution_environment() -> tuple[tuple[str, str], ...]:
 
 def _build_local_backend(run_root: Path) -> LocalProcessRunnerBackend:
     environment = _local_execution_environment()
+    launcher_interpreter = Path(sys.executable).absolute()
+    if not launcher_interpreter.is_file():
+        raise ValueError("local backend launcher interpreter must be a file")
     return LocalProcessRunnerBackend(
         LocalProcessBackendConfig(
             run_root=run_root,
-            launcher_interpreter=Path(sys.executable).resolve(strict=True),
+            launcher_interpreter=launcher_interpreter,
             environment=environment,
             environment_allowlist=tuple(name for name, _ in environment),
             heartbeat_interval_seconds=0.5,

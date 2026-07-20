@@ -475,7 +475,9 @@ def _replay(
 def execute(
     *, training_python: Path, output_root: Path, metric_approval_path: Path, seed: int
 ) -> None:
-    training_python = training_python.resolve(strict=True)
+    training_python = training_python.absolute()
+    if not training_python.is_file():
+        raise ValueError("training Python must be an existing file")
     output_root = output_root.resolve(strict=False)
     if output_root.exists():
         raise FileExistsError(f"refusing to overwrite Poisson evidence: {output_root}")

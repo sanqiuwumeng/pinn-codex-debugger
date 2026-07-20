@@ -1,16 +1,20 @@
 from __future__ import annotations
 
+import os
 import sys
 import tempfile
 import unittest
 from datetime import UTC, datetime
 from pathlib import Path
+from unittest import mock
 
 SRC = Path(__file__).resolve().parents[1] / "src"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 REMOTE_E2E = REPOSITORY_ROOT / "validation" / "remote_e2e"
+SMOKE_VALIDATION = REPOSITORY_ROOT / "validation" / "smoke"
 sys.path.insert(0, str(SRC))
 sys.path.insert(0, str(REMOTE_E2E))
+sys.path.insert(0, str(SMOKE_VALIDATION))
 
 from pinn_strategy_system.application import (  # noqa: E402
     OperationOutcome,
@@ -30,6 +34,7 @@ from pinn_strategy_system.retrieval import (  # noqa: E402
     QWEN3_RERANKER_MODEL_ID,
     QWEN3_RERANKER_REVISION,
 )
+from run_governed_pinn_smoke import _build_local_backend  # noqa: E402
 
 
 class RemoteEndToEndContractTests(unittest.TestCase):
@@ -115,6 +120,31 @@ class RemoteEndToEndContractTests(unittest.TestCase):
             query_payload=advisory,
             conflict_payload=conflict,
         )
+
+    @unittest.skipIf(os.name == "nt", "virtualenv launchers are symlinks on Linux")
+    def test_local_backend_preserves_virtualenv_launcher_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            interpreter = root / "base-python"
+            interpreter.write_text("placeholder", encoding="utf-8")
+            interpreter.chmod(0o755)
+            launcher = root / "venv" / "bin" / "python"
+            launcher.parent.mkdir(parents=True)
+            launcher.symlink_to(interpreter)
+            run_root = root / "runs"
+            run_root.mkdir()
+
+            with mock.patch.object(sys, "executable", str(launcher)):
+                backend = _build_local_backend(run_root)
+
+            self.assertEqual(
+                backend._config.launcher_interpreter,
+                launcher.absolute(),
+            )
+            self.assertNotEqual(
+                backend._config.launcher_interpreter,
+                launcher.resolve(strict=True),
+            )
 
 
 if __name__ == "__main__":
