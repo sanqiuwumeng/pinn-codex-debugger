@@ -15,20 +15,20 @@
 ## 3. Local Qualification and Sync
 
 - [x] 3.1 Run focused and full orchestrator/MCP/OpenSpec/credential/architecture gates in the approved local sandbox.
-- [ ] 3.2 Commit the implementation and sync that exact Git archive into a new versioned AutoDL directory with hash verification.
-- [ ] 3.3 Verify remote Qwen and PINN environments plus real GPU kernels before the formal chain.
+- [x] 3.2 Commit the implementation and sync that exact Git archive into a new versioned AutoDL directory with hash verification.
+- [x] 3.3 Verify remote Qwen and PINN environments plus real GPU kernels before the formal chain.
 
 ## 4. Remote End-to-End Qualification
 
-- [ ] 4.1 Publish the approved cross-domain Wiki version through the production CLI; do not publish the Skill candidate.
-- [ ] 4.2 Build and activate a Qdrant index from the authoritative Wiki source using the pinned Qwen3 embedding provider.
-- [ ] 4.3 Retrieve and rerank the published Wiki with the pinned Qwen3 reranker and verify provenance, revision and conflict visibility.
-- [ ] 4.4 Run an independent Poisson PINN audit, smoke/full execution, collection, maximum-error localization, approved metric decision and immutable evidence.
-- [ ] 4.5 Replay the completed execution without relaunch and prove the PINN decision cites retrieved knowledge only as advisory evidence.
-- [ ] 4.6 Preserve failed/rejected evidence and produce a credential-free remote completion manifest.
+- [x] 4.1 Publish the approved cross-domain Wiki version through the production CLI; do not publish the Skill candidate.
+- [x] 4.2 Build and activate a Qdrant index from the authoritative Wiki source using the pinned Qwen3 embedding provider.
+- [x] 4.3 Retrieve and rerank the published Wiki with the pinned Qwen3 reranker and verify provenance, revision and conflict visibility.
+- [x] 4.4 Run an independent Poisson PINN audit, smoke/full execution, collection, maximum-error localization, approved metric decision and immutable evidence.
+- [x] 4.5 Replay the completed execution without relaunch and prove the PINN decision cites retrieved knowledge only as advisory evidence.
+- [x] 4.6 Preserve failed/rejected evidence and produce a credential-free remote completion manifest.
 
 ## 5. Closeout
 
-- [ ] 5.1 Verify remote exit marker, logs, artifact count, sizes and hashes before one-time result transfer.
-- [ ] 5.2 Back up any existing local destination, transfer results once and revalidate locally.
-- [ ] 5.3 Run final release gates, issue a tracked evidence report and close this change only when no mandatory task remains.
+- [x] 5.1 Verify remote exit marker, logs, artifact count, sizes and hashes before one-time result transfer.
+- [x] 5.2 Back up any existing local destination, transfer results once and revalidate locally.
+- [x] 5.3 Run final release gates, issue a tracked evidence report and close this change only when no mandatory task remains.
