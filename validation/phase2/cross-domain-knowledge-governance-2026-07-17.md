@@ -1,8 +1,13 @@
 # Cross-Domain Knowledge Governance
 
-Date: 2026-07-17
+Date: 2026-07-17 (scope note updated 2026-07-20)
 
 Status: `CANDIDATES_CREATED_NOT_PUBLISHED`
+
+The 2026-07-17 bundle is historical evidence. The current active peer matrix is
+Poisson, viscous Burgers and two-dimensional heat transfer. Lid-driven-cavity
+Navier-Stokes assets are retained as a deferred non-gating prototype and are
+not required by the superseding candidate generator.
 
 ## Evidence comparison
 

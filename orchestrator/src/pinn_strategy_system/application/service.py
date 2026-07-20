@@ -17,6 +17,8 @@ from pinn_strategy_system.contracts import (
     ApprovalDecision,
     ApprovalKind,
     ApprovalRecord,
+    ArtifactCollectionSpec,
+    ArtifactCollectionStatus,
     AuditStatus,
     ExperimentCompletenessReport,
     ExperimentDraft,
@@ -111,6 +113,85 @@ class OperatorApplicationService:
         )
         return result.model_copy(
             update={"data": {**result.data, "zero_relaunch_replay": True}}
+        )
+
+    def collect(
+        self,
+        workflow_id: str,
+        destination_root: Path,
+    ) -> ApplicationResult:
+        if not destination_root.is_absolute():
+            raise ValueError("collection destination must be absolute")
+        case = self._catalog.load(workflow_id)
+        manifest = _manifest_for_case(case)
+        if manifest is None:
+            return self._record(
+                ApplicationResult(
+                    command="collect",
+                    outcome=OperationOutcome.NEEDS_INPUT,
+                    code="NEEDS_RUN_MANIFEST",
+                    message="Artifact collection requires a run manifest.",
+                    workflow_id=workflow_id,
+                )
+            )
+        if case.execution_profile_path is None:
+            return self._record(
+                ApplicationResult(
+                    command="collect",
+                    outcome=OperationOutcome.NEEDS_INPUT,
+                    code="NEEDS_EXECUTION_PROFILE",
+                    message="Artifact collection requires an execution profile.",
+                    workflow_id=workflow_id,
+                )
+            )
+        registry = SQLiteRunRegistry(self._run_registry_path)
+        submission = registry.lookup(manifest.idempotency_key)
+        if submission is None or submission.backend_ref is None:
+            return self._record(
+                ApplicationResult(
+                    command="collect",
+                    outcome=OperationOutcome.NEEDS_INPUT,
+                    code="NEEDS_COMPLETED_RUN",
+                    message="Artifact collection requires a completed backend run.",
+                    workflow_id=workflow_id,
+                )
+            )
+        runner = ManifestFirstRunner(
+            registry,
+            self._backend_factory(case.execution_profile_path),
+        )
+        collected = runner.collect(
+            manifest.idempotency_key,
+            ArtifactCollectionSpec(
+                run_id=manifest.run_id,
+                backend_ref=submission.backend_ref,
+                destination_root=str(destination_root.resolve(strict=False)),
+                required_artifacts=manifest.expected_artifacts,
+            ),
+        )
+        report = collected.collection_report
+        if report is None:
+            raise RuntimeError("completed collection lacks an artifact report")
+        complete = report.status is ArtifactCollectionStatus.COMPLETE
+        return self._record(
+            ApplicationResult(
+                command="collect",
+                outcome=(
+                    OperationOutcome.SUCCESS
+                    if complete
+                    else OperationOutcome.RUN_FAILED
+                ),
+                code=(
+                    "COLLECTION_COMPLETE" if complete else "COLLECTION_FAILED"
+                ),
+                message=(
+                    "Run artifacts were collected with verified manifests."
+                    if complete
+                    else "Run artifact collection did not satisfy its contract."
+                ),
+                workflow_id=workflow_id,
+                data={"collection_report": report.model_dump(mode="json")},
+            )
         )
 
     def _evaluate_case(

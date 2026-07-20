@@ -10,14 +10,21 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from pinn_strategy_system.domain_metrics import DomainProviderRegistry
+
 from pinn_strategy_system.application import (
     ApplicationResult,
+    McpDiagnosisApplicationService,
     OperationOutcome,
     OperatorApplicationService,
     OperatorCase,
+    ProjectAdapterManifest,
+    ProjectAdapterService,
+    PostRunEvaluationService,
     RagApplicationService,
     SubprocessModelTransportFactory,
     load_execution_backend,
+    load_post_run_contract,
 )
 
 
@@ -45,10 +52,29 @@ def build_parser() -> argparse.ArgumentParser:
         command = commands.add_parser(name)
         _common_arguments(command)
         command.add_argument("--case", required=True)
+    adapt = commands.add_parser("adapt")
+    _common_arguments(adapt)
+    adapt.add_argument("--manifest", required=True)
+    adapt.add_argument("--output", required=True)
+    diagnose = commands.add_parser("diagnose")
+    _common_arguments(diagnose)
+    diagnose.add_argument("--project-id", required=True)
+    diagnose.add_argument("--query", required=True)
+    diagnose.add_argument("--mcp-profile", required=True)
+    diagnose.add_argument("--evidence", action="append", default=[])
+    diagnose.add_argument("--anchor", action="append", default=[])
+    diagnose.add_argument("--max-sections", type=int, default=5)
+    evaluate = commands.add_parser("evaluate")
+    _common_arguments(evaluate)
+    evaluate.add_argument("--contract", required=True)
     for name in ("smoke", "full", "status", "replay"):
         command = commands.add_parser(name)
         _common_arguments(command)
         command.add_argument("--workflow", required=True)
+    collect = commands.add_parser("collect")
+    _common_arguments(collect)
+    collect.add_argument("--workflow", required=True)
+    collect.add_argument("--destination", required=True)
     rag = commands.add_parser("rag")
     rag_commands = rag.add_subparsers(dest="rag_command", required=True)
     rebuild = rag_commands.add_parser("rebuild")
@@ -91,6 +117,9 @@ def main(argv: list[str] | None = None) -> int:
             "full",
             "status",
             "replay",
+            "collect",
+            "diagnose",
+            "evaluate",
             "rag rebuild",
             "rag query",
         }
@@ -135,6 +164,56 @@ def _dispatch(
         )
         operation = service.audit if arguments.command == "audit" else service.plan
         return operation(case=case, case_path=case_path)
+    if arguments.command == "adapt":
+        manifest_path = _input_file(arguments.manifest, base_directory)
+        output_path = _output_file(arguments.output, base_directory)
+        manifest = _load_project_manifest(manifest_path)
+        report = ProjectAdapterService(
+            artifact_root=runtime_root / "artifacts" / "project-adapter"
+        ).adapt(manifest=manifest, output_path=output_path)
+        has_unresolved = bool(report.unresolved)
+        return ApplicationResult(
+            command="adapt",
+            outcome=(
+                OperationOutcome.NEEDS_INPUT
+                if has_unresolved
+                else OperationOutcome.SUCCESS
+            ),
+            code=(
+                "ADAPTED_WITH_UNRESOLVED" if has_unresolved else "ADAPTED"
+            ),
+            message=(
+                "Project governance case was created with unresolved user inputs."
+                if has_unresolved
+                else "Project governance case was created."
+            ),
+            workflow_id=report.case.request.workflow_id,
+            data={
+                "case_path": str(report.output_path),
+                "source_snapshot_ref": report.source_snapshot_ref.model_dump(
+                    mode="json"
+                ),
+                "files": [item.model_dump(mode="json") for item in report.files],
+                "unresolved": list(report.unresolved),
+            },
+        )
+    if arguments.command == "diagnose":
+        profile_path = _input_file(arguments.mcp_profile, base_directory)
+        return McpDiagnosisApplicationService().diagnose(
+            project_id=arguments.project_id,
+            query=arguments.query,
+            profile_path=profile_path,
+            evidence=tuple(arguments.evidence),
+            anchors=tuple(arguments.anchor),
+            max_sections=arguments.max_sections,
+        )
+    if arguments.command == "evaluate":
+        contract_path = _input_file(arguments.contract, base_directory)
+        contract = load_post_run_contract(contract_path)
+        return PostRunEvaluationService(
+            artifact_root=runtime_root / "artifacts" / "evaluations",
+            provider_registry=DomainProviderRegistry(()),
+        ).evaluate(contract)
     if arguments.command in {"smoke", "full", "status", "replay"}:
         service = OperatorApplicationService(
             runtime_root=runtime_root,
@@ -142,6 +221,16 @@ def _dispatch(
         )
         operation = getattr(service, arguments.command)
         return operation(arguments.workflow)
+    if arguments.command == "collect":
+        service = OperatorApplicationService(
+            runtime_root=runtime_root,
+            backend_factory=load_execution_backend,
+        )
+        destination = _output_directory(
+            arguments.destination,
+            base_directory,
+        )
+        return service.collect(arguments.workflow, destination)
     if arguments.command == "rag":
         case_path = _input_file(arguments.case, base_directory)
         profile_path = _input_file(arguments.model_profile, base_directory)
@@ -164,6 +253,17 @@ def _load_case(path: Path) -> OperatorCase:
         return OperatorCase.model_validate_json(path.read_text(encoding="utf-8"))
     except (OSError, ValidationError) as error:
         raise CliInputError("operator case is invalid") from error
+
+
+def _load_project_manifest(path: Path) -> ProjectAdapterManifest:
+    if path.stat().st_size > 4 * 1024 * 1024:
+        raise CliInputError("project adapter manifest exceeds the 4 MiB limit")
+    try:
+        return ProjectAdapterManifest.model_validate_json(
+            path.read_text(encoding="utf-8")
+        )
+    except (OSError, ValidationError) as error:
+        raise CliInputError("project adapter manifest is invalid") from error
 
 
 def _runtime_root(value: str) -> Path:
@@ -194,6 +294,22 @@ def _input_directory(value: str, base_directory: Path | None) -> Path:
     if not path.is_dir():
         raise CliInputError("input directory does not exist")
     return path.resolve(strict=True)
+
+
+def _output_file(value: str, base_directory: Path | None) -> Path:
+    path = _explicit_path(value, base_directory)
+    if not path.is_absolute() or not path.parent.is_dir():
+        raise CliInputError("output parent must be an existing absolute directory")
+    return path.resolve(strict=False)
+
+
+def _output_directory(value: str, base_directory: Path | None) -> Path:
+    path = _explicit_path(value, base_directory)
+    if not path.is_absolute() or not path.parent.is_dir():
+        raise CliInputError(
+            "output directory parent must be an existing absolute directory"
+        )
+    return path.resolve(strict=False)
 
 
 def _explicit_path(value: str, base_directory: Path | None) -> Path:

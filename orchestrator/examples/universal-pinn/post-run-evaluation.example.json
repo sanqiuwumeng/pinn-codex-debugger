@@ -1,0 +1,87 @@
+{
+  "schema_version": "1.0",
+  "evaluation_id": "universal-example-evaluation",
+  "workflow_id": "universal-example-workflow",
+  "run_id": "universal-example-candidate-run",
+  "observed_failure_mechanism": "User-confirmed localized maximum-error mechanism.",
+  "baseline": {
+    "schema_version": "1.0",
+    "artifact_id": "baseline-field",
+    "path": "C:/ABSOLUTE/COLLECTED/baseline.npz",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "values_key": "values",
+    "axes": ["x", "y"],
+    "coordinate_keys": {"x": "x", "y": "y"},
+    "context_field_keys": {},
+    "roi_mask_keys": {},
+    "reference_identity": "user-declared-reference-v1",
+    "unit": "dimensionless",
+    "coordinate_system": "cartesian-xy",
+    "normalization": "physical-values"
+  },
+  "candidate": {
+    "schema_version": "1.0",
+    "artifact_id": "candidate-field",
+    "path": "C:/ABSOLUTE/COLLECTED/candidate.npz",
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "values_key": "values",
+    "axes": ["x", "y"],
+    "coordinate_keys": {"x": "x", "y": "y"},
+    "context_field_keys": {},
+    "roi_mask_keys": {},
+    "reference_identity": "user-declared-reference-v1",
+    "unit": "dimensionless",
+    "coordinate_system": "cartesian-xy",
+    "normalization": "physical-values"
+  },
+  "reference": {
+    "schema_version": "1.0",
+    "artifact_id": "reference-field",
+    "path": "C:/ABSOLUTE/COLLECTED/reference.npz",
+    "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "values_key": "values",
+    "axes": ["x", "y"],
+    "coordinate_keys": {"x": "x", "y": "y"},
+    "context_field_keys": {},
+    "roi_mask_keys": {"focus": "focus_roi"},
+    "reference_identity": "user-declared-reference-v1",
+    "unit": "dimensionless",
+    "coordinate_system": "cartesian-xy",
+    "normalization": "physical-values"
+  },
+  "metric_contract": {
+    "schema_version": "1.0",
+    "contract_id": "user-confirmed-example-policy",
+    "physical_model_authority_ref": {
+      "schema_version": "1.0",
+      "artifact_id": "physical-authority",
+      "uri": "artifact://example/physical-authority",
+      "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "media_type": "application/json",
+      "size_bytes": null
+    },
+    "reference_evidence_refs": [{
+      "schema_version": "1.0",
+      "artifact_id": "reference-evidence",
+      "uri": "artifact://example/reference-evidence",
+      "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "media_type": "application/json",
+      "size_bytes": null
+    }],
+    "metrics": [
+      {"schema_version": "1.0", "name": "max_abs", "role": "PRIMARY", "direction": "MINIMIZE", "evidence_basis": "REFERENCE_EVIDENCE", "required": true, "threshold": null, "max_regression": null, "max_relative_regression": null, "weight": null, "unit": "dimensionless"},
+      {"schema_version": "1.0", "name": "rmse", "role": "PRIMARY", "direction": "MINIMIZE", "evidence_basis": "REFERENCE_EVIDENCE", "required": true, "threshold": null, "max_regression": null, "max_relative_regression": null, "weight": null, "unit": "dimensionless"},
+      {"schema_version": "1.0", "name": "mae", "role": "GUARDRAIL", "direction": "MINIMIZE", "evidence_basis": "REFERENCE_EVIDENCE", "required": true, "threshold": null, "max_regression": 0.01, "max_relative_regression": 0.1, "weight": null, "unit": "dimensionless"}
+    ],
+    "primary_order": ["max_abs", "rmse"],
+    "aggregation_policy": "LEXICOGRAPHIC",
+    "scalar_aggregation_authorized": false,
+    "roi_labels": ["focus"],
+    "time_windows": [],
+    "acceptable_regression_notes": []
+  },
+  "domain_provider_ids": [],
+  "top_k": 10,
+  "percentiles": [50.0, 90.0, 95.0, 99.0],
+  "connected_percentile": 95.0
+}

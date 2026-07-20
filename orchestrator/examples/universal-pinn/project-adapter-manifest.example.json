@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "adapter_id": "universal-example-adapter",
+  "project_root": "C:/ABSOLUTE/PINN_PROJECT",
+  "include_files": ["model.py", "config.json", "train.py"],
+  "case_template": {
+    "schema_version": "1.0",
+    "case_id": "universal-example-case",
+    "request": {
+      "schema_version": "1.0",
+      "request_id": "universal-example-request",
+      "workflow_id": "universal-example-workflow",
+      "project_id": "universal-example-project",
+      "objective": "Audit and optimize one user-declared PINN intervention.",
+      "intent": "READ_ONLY",
+      "snapshot_ref": {
+        "schema_version": "1.0",
+        "artifact_id": "placeholder-snapshot",
+        "uri": "artifact://placeholder/source-snapshot",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "media_type": "application/json",
+        "size_bytes": null
+      },
+      "requested_by": "user"
+    },
+    "unit_system": {
+      "schema_version": "1.0",
+      "unit_system_id": "user-declared-units",
+      "name": "User-declared internally consistent units",
+      "quantity_units": {"u": "dimensionless"},
+      "source_refs": [],
+      "confirmed_by_user": false
+    },
+    "physical_model": {
+      "schema_version": "1.0",
+      "authority_id": "user-declared-physical-model",
+      "project_id": "universal-example-project",
+      "model_family": "PINN",
+      "pde_family": "user-must-confirm",
+      "task_type": "forward",
+      "governing_equation_refs": [{
+        "schema_version": "1.0",
+        "uri": "file:///C:/ABSOLUTE/PINN_PROJECT/model.py",
+        "sha256": null,
+        "line_start": 1,
+        "line_end": 1,
+        "symbol": "user-must-confirm-equation"
+      }],
+      "boundary_condition_refs": [],
+      "initial_condition_refs": [],
+      "geometry_refs": [],
+      "parameter_source_refs": [],
+      "output_channels": ["u"],
+      "unit_system": {
+        "schema_version": "1.0",
+        "unit_system_id": "user-declared-units",
+        "name": "User-declared internally consistent units",
+        "quantity_units": {"u": "dimensionless"},
+        "source_refs": [],
+        "confirmed_by_user": false
+      },
+      "confirmed_by_user": false
+    }
+  }
+}

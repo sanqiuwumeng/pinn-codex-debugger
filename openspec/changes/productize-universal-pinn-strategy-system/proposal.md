@@ -11,7 +11,8 @@
 - 在隔离模型进程中实现 `Qwen3EmbeddingProvider` 与 `Qwen3RerankerProvider`，固定已验收的不可变模型 revisions，并通过显式传输契约与编排层通信。
 - 为 Qdrant 派生索引增加版本标识、构建后切换、重建和回滚语义；冲突证据在 rerank 后仍必须进入确定性冲突门禁。
 - 新增 `pinn-strategy` 操作者 CLI，覆盖 `audit`、`plan`、`smoke`、`full`、`status`、`replay` 和 RAG 索引操作；所有命令同时支持人类可读和 JSON 输出。
-- 建立四个平级的科学验证案例：二维 Poisson、经典黏性 Burgers、二维顶盖驱动方腔不可压 Navier-Stokes 和二维传热。每个案例按自己的物理权威、单位、参考证据、用户确认指标和多 seed 结果独立形成科学证据；实施顺序和计算成本不得被解释为案例等级。
+- 建立三个当前平级的科学验证案例：二维 Poisson、经典黏性 Burgers 和二维传热。每个案例按自己的物理权威、单位、参考证据、用户确认指标和多 seed 结果独立形成科学证据；实施顺序和计算成本不得被解释为案例等级。已完成的顶盖驱动方腔 Navier-Stokes 原型与参考证据保留，但其 full qualification 延期且不阻断本 change。
+- 把 MCP 快速故障检索、清单驱动的通用项目适配、LangGraph/CLI 审批运行控制和运行后确定性评估串成一个可操作闭环；适配器不得静默猜测项目物理语义。
 - 只有重复、有效且来源完整的模式才能生成 Wiki/Skill 候选；发布仍需显式人工批准。
 
 ## Capabilities
@@ -23,6 +24,7 @@
 - `qwen3-retrieval-runtime`: 定义隔离 Qwen3 embedding/reranker 提供者、模型版本固定、候选池政策和 Qdrant 索引版本治理。
 - `operator-cli`: 定义稳定 CLI 命令、显式输入、结构化输出、退出码和审批语义。
 - `cross-domain-scientific-qualification`: 定义多 seed 传热复核、非传热真实案例和知识晋级所需证据。
+- `universal-project-adapter`: 定义项目扫描清单、治理契约生成、MCP 诊断请求和运行后字段评估边界。
 
 ### Modified Capabilities
 

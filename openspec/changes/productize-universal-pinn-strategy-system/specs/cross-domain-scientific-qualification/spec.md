@@ -7,15 +7,15 @@ The existing thermal intervention SHALL be evaluated with at least three predecl
 - **WHEN** other seeds pass but a predeclared seed exceeds either MAE guardrail
 - **THEN** the report retains the failure and does not present a universal success based only on aggregate improvement
 
-### Requirement: Scientific validation cases are peers
-Two-dimensional Poisson, classic viscous Burgers, two-dimensional lid-driven-cavity incompressible Navier-Stokes and two-dimensional heat transfer SHALL be represented as peer scientific validation cases. Implementation order, equation nonlinearity and compute cost MUST NOT create a primary, secondary or regression-only case hierarchy.
+### Requirement: Active scientific validation cases are peers
+Two-dimensional Poisson, classic viscous Burgers and two-dimensional heat transfer SHALL be represented as the current peer scientific validation cases. Implementation order, equation nonlinearity and compute cost MUST NOT create a primary, secondary or regression-only case hierarchy. Existing lid-driven-cavity NS assets SHALL remain an isolated deferred prototype and SHALL NOT block the current release.
 
 #### Scenario: Release evidence is summarized
-- **WHEN** a cross-case report compares the four cases
+- **WHEN** a cross-case report compares the three active cases
 - **THEN** it reports a case-by-capability evidence matrix and case-local outcomes without assigning a global scientific rank
 
-### Requirement: Every peer case completes the governed lifecycle
-Each peer case SHALL complete physical and unit audit, user metric confirmation, reference validation, baseline diagnosis, single-intervention smoke, at least three predeclared full seeds, localized analysis, replay and provenance validation without inheriting another case's semantics.
+### Requirement: Every active peer case completes the governed lifecycle
+Each active peer case SHALL complete physical and unit audit, user metric confirmation, reference validation, baseline diagnosis, single-intervention smoke, at least three predeclared full seeds, localized analysis, replay and provenance validation without inheriting another case's semantics.
 
 #### Scenario: Burgers metric preferences are confirmed
 - **WHEN** the case contract is initialized
@@ -29,27 +29,19 @@ Each peer case SHALL complete physical and unit audit, user metric confirmation,
 - **WHEN** the Poisson case is qualified
 - **THEN** its manufactured reference, elliptic residual, boundary constraints, localized error and multi-seed uncertainty are governed as scientific evidence rather than labeled a lightweight regression fixture
 
-### Requirement: Lid-driven-cavity Navier-Stokes has an independent reference
-The steady two-dimensional incompressible lid-driven-cavity case SHALL declare the unit-square geometry, Reynolds number 100, moving-lid and no-slip boundaries, pressure gauge, and an independent CFD reference that passes grid-convergence and Ghia centerline cross-validation gates.
+### Requirement: Deferred Navier-Stokes assets remain isolated
+The existing steady two-dimensional incompressible lid-driven-cavity reference, worker and domain provider SHALL remain preserved but inactive. They SHALL NOT be imported by default, counted as completed scientific qualification or required by current release gates.
 
-#### Scenario: The NS metric policy is confirmed
-- **WHEN** the NS case contract is initialized
-- **THEN** it declares the user-confirmed lexicographic order `velocity relative_l2 -> velocity vector max_abs -> centerline velocity RMSE`, enforces wall velocity as a hard constraint, and treats continuity residual, momentum residual, pressure gauge and gauge-invariant pressure-gradient error as guardrail or diagnostic evidence
-
-#### Scenario: Pressure differs only by a constant
-- **WHEN** candidate and reference pressure fields use different additive gauges
-- **THEN** the system aligns the declared gauge or compares pressure gradients and does not report the raw constant offset as physical error
-
-#### Scenario: An NS seed violates incompressibility
-- **WHEN** a predeclared seed improves a velocity primary but exceeds a continuity or momentum guardrail
-- **THEN** the seed is rejected and remains visible with its localized velocity, centerline and residual evidence
+#### Scenario: A current release is qualified
+- **WHEN** the active peer-case matrix and engineering gates pass while NS full qualification is still deferred
+- **THEN** the release can complete without claiming validated NS optimization
 
 ### Requirement: Generality claims are bounded by evidence
 Release conclusions SHALL distinguish framework validation, case validation, cross-seed evidence and cross-domain evidence.
 
 #### Scenario: Peer-case evidence is summarized
 - **WHEN** release qualification summarizes the results
-- **THEN** it may claim the universal architecture works across the four declared peer cases but MUST NOT claim all PINN strategies or PDE families are scientifically optimized
+- **THEN** it may claim the universal architecture works across the three active peer cases but MUST NOT claim validated NS optimization, all PINN strategies or all PDE families are scientifically optimized
 
 ### Requirement: Knowledge promotion requires repeated validated patterns
 Wiki and Skill candidates SHALL cite all supporting and contradicting validated runs, and Skill publication SHALL still require explicit human approval.

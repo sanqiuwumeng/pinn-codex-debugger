@@ -36,6 +36,27 @@ The strategy system is PINN-general rather than heat-transfer-specific:
 The service is read-only. It does not modify PINN projects, start training jobs,
 install packages, call network APIs, or use background state.
 
+## Governed End-to-End Flow
+
+The operational product is an explicit four-part chain:
+
+```text
+read-only MCP diagnosis
+  -> manifest-driven project adaptation
+  -> LangGraph/CLI audit, approval, execution and collection
+  -> aligned-field localization, metric decision and immutable evidence
+```
+
+The adapter never infers a PDE, unit conversion, truth source or metric priority
+from filenames or variable names. The evaluator verifies NPZ hashes and
+coordinate alignment, reports baseline/candidate `max_abs` locations, and only
+then applies the user-confirmed metric policy and guardrails.
+
+See `orchestrator/examples/universal-pinn/README.md` for the actual command and
+data flow. Poisson, Burgers and two-dimensional heat transfer are the current
+peer qualification cases. Lid-driven-cavity Navier-Stokes assets are preserved
+as a deferred, non-gating prototype.
+
 ## Product Scope
 
 This package is useful as a debugging assistant for:
@@ -69,6 +90,7 @@ training decisions should still go through normal engineering review.
 |   `-- rules_mcp/
 |-- orchestrator/
 |   |-- pyproject.toml
+|   |-- examples/universal-pinn/
 |   |-- src/pinn_strategy_system/
 |   `-- tests/
 |-- openspec/

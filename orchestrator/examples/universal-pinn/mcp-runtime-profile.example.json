@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "executable": "C:/ABSOLUTE/PYTHON/python.exe",
+  "arguments": ["-m", "pinn_hybrid_rag"],
+  "working_directory": "C:/ABSOLUTE/REPOSITORY/mcp-server",
+  "environment_file": "C:/ABSOLUTE/mcp-environment.json",
+  "source_uri": "file:///C:/ABSOLUTE/REPOSITORY/PINN-handbook.md",
+  "request_timeout_seconds": 15.0
+}

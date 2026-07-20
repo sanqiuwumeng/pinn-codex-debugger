@@ -2,6 +2,11 @@
 
 from .autodl_ssh import AutoDlSshBackendConfig, AutoDlSshRunnerBackend
 from .local_process import LocalProcessBackendConfig, LocalProcessRunnerBackend
+from .mcp_process import (
+    StdioMcpRuntimeProfile,
+    SubprocessMcpMessageHandler,
+    load_mcp_runtime_profile,
+)
 from .prediction import FieldData, PredictionAnalyzer
 from .process_monitor import (
     ApprovedProcessIdentity,
@@ -38,6 +43,8 @@ __all__ = [
     "LocalProcessRunnerBackend",
     "ManifestFirstRunner",
     "McpReadOnlyRetrievalProvider",
+    "StdioMcpRuntimeProfile",
+    "SubprocessMcpMessageHandler",
     "PredictionAnalyzer",
     "ProcessUnavailableError",
     "RetrievalProvider",
@@ -48,4 +55,5 @@ __all__ = [
     "SshTransportError",
     "SystemOpenSshRuntime",
     "SystemOpenSshTransport",
+    "load_mcp_runtime_profile",
 ]

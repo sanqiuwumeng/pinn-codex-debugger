@@ -27,3 +27,22 @@ All CLI output and persisted diagnostics SHALL redact credentials and direct rem
 #### Scenario: An SSH command fails
 - **WHEN** the underlying transport includes sensitive runtime arguments
 - **THEN** the user receives a sanitized failure and the raw secret-bearing command is not written to logs
+
+### Requirement: CLI exposes the complete operational chain
+`pinn-strategy` SHALL expose project adaptation, read-only MCP diagnosis and deterministic post-run evaluation in addition to existing audit, plan, execution, status and RAG operations. Each command SHALL remain a thin client over an injected application service.
+
+#### Scenario: A user onboards an existing PINN project
+- **WHEN** `pinn-strategy adapt` receives a valid project manifest and a new output path
+- **THEN** it verifies the declared project files, emits an `OperatorCase` with a deterministic source snapshot, and reports unresolved user-governed fields without guessing them
+
+#### Scenario: A user requests quick fault retrieval
+- **WHEN** `pinn-strategy diagnose` receives an observable symptom and an explicit MCP runtime profile
+- **THEN** it calls the isolated read-only MCP provider and returns source hash plus line-range evidence without mutating workflow state
+
+#### Scenario: A completed run is evaluated
+- **WHEN** `pinn-strategy evaluate` receives an explicit field-evaluation contract
+- **THEN** it checks field identity and alignment, reports `max_abs` location before decision, applies the user-confirmed metric order and writes immutable evidence artifacts
+
+#### Scenario: Completed run artifacts are collected
+- **WHEN** `pinn-strategy collect` is invoked for a reconciled completed run and a new explicit destination
+- **THEN** it calls the production backend collection contract, verifies source and destination manifests, and refuses overwrite

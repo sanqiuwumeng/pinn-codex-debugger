@@ -68,12 +68,23 @@
 - [x] 8.4 Produce a Phase 2 evidence report with baseline commit, environment manifests, model revisions, backend results and scientific boundaries.
 - [x] 8.5 Mark this OpenSpec complete only when every release gate passes and no mandatory work remains.
 
-## 9. Peer-Case Scientific Validation Extension
+## 9. Active Peer-Case Scientific Validation Extension
 
-- [x] 9.1 Record the user's correction that Poisson, Burgers, lid-driven-cavity Navier-Stokes and 2D heat transfer are peer scientific validation cases with no primary/secondary hierarchy.
+- [x] 9.1 Record the user's latest scope decision: Poisson, Burgers and 2D heat transfer are the current peer scientific validation cases; retain the NS prototype but defer its full qualification without making it a release gate.
 - [ ] 9.2 Promote the existing Poisson implementation to the same governed multi-seed scientific lifecycle and retain all accepted and rejected outcomes.
-- [x] 9.3 Implement an independent `Re=100` lid-driven-cavity CFD reference with grid-convergence evidence and Ghia centerline cross-validation.
-- [x] 9.4 Implement the multi-output `u,v,p` NS PINN worker and a physically isolated NS domain metric provider with gauge-invariant pressure handling.
-- [ ] 9.5 Complete NS audit, approved metric contract, baseline localization, single-intervention smoke, at least three predeclared full seeds, localized analysis, replay and provenance validation.
-- [ ] 9.6 Replace hierarchical cross-case wording with a peer case-by-capability evidence matrix and regenerate governed Wiki/Skill candidates without automatic publication.
+- [x] 9.3 Retain the completed independent `Re=100` lid-driven-cavity CFD reference as non-gating future evidence.
+- [x] 9.4 Retain the completed multi-output `u,v,p` NS worker and physically isolated domain provider without default activation.
+- Deferred 9.5: NS audit, approved metric contract, smoke and multi-seed full qualification require a future explicit architecture confirmation.
+- [ ] 9.6 Produce the current three-case peer case-by-capability evidence matrix and regenerate governed Wiki/Skill candidates without automatic publication.
 - [ ] 9.7 Run full engineering, scientific, credential, semantic-isolation and artifact-provenance release gates, then issue a superseding evidence report and close this extension only if no mandatory task remains.
+
+## 10. Unified Operational Closed Loop
+
+- [x] 10.1 Record the user's explicit `Yes` for MCP diagnosis -> project adapter -> LangGraph/CLI control -> post-run evaluation and reuse the existing orchestrator sandbox.
+- [x] 10.2 Implement a manifest-driven generic PINN project adapter that verifies declared source paths, creates a deterministic source snapshot and emits an `OperatorCase` without silently inferring physics.
+- [x] 10.3 Add an isolated stdio MCP diagnostic client and CLI entry that verifies read-only annotations and returns traceable handbook evidence.
+- [x] 10.4 Add explicit field-artifact contracts and a generic post-run evaluator that loads baseline/candidate/reference arrays, validates alignment, localizes `max_abs`, and only then applies the confirmed metric contract.
+- [x] 10.5 Persist comparison, decision and evidence-candidate artifacts with no-overwrite semantics; do not automatically publish Wiki or Skill entries.
+- [x] 10.6 Prove through CLI and service tests that missing metric priority, ambiguous physics, invalid alignment, failed smoke and missing approvals stop the loop at a governed state.
+- [x] 10.7 Add a domain-neutral example and operator documentation showing the actual command/data call sequence.
+- [ ] 10.8 Run the complete orchestrator, MCP, OpenSpec, architecture isolation and credential gates and record a final evidence report.

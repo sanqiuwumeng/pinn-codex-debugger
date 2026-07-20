@@ -132,15 +132,31 @@ pinn-strategy rag query --case <path> --query <text>
 
 所有路径解析为绝对路径并写入请求契约；不能依赖当前工作目录。默认输出简洁文本，`--json` 输出版本化对象。退出码区分成功、需要用户确认、门禁拒绝、运行失败和内部错误。`full` 只能消费持久化 approval；standing authorization 可以由已有 approval record 满足，但 CLI 不自行生成批准。
 
-## Decision 6: Use four peer scientific validation cases
+## Decision 6: Use three active peer scientific validation cases and defer NS full qualification
 
-用户在 2026-07-17 再次纠正科学资格验证的层级设计：Poisson、Burgers、二维顶盖驱动方腔不可压 Navier-Stokes 和二维传热都是科学验证手段，没有主次之分。此前将 Burgers 称为主要非传热科学门禁、将 Poisson 称为轻量回归证据的表述被本决策取代。系统必须按案例矩阵报告证据覆盖，不能根据实施顺序、非线性程度或计算成本给案例分级。
+用户在 2026-07-20 决定暂不继续顶盖驱动方腔 NS full qualification。当前发布资格验证由 Poisson、Burgers 和二维传热三个平级案例组成；此前将 Burgers 称为主要非传热科学门禁、将 Poisson 称为轻量回归证据的表述仍被取代。系统必须按案例矩阵报告证据覆盖，不能根据实施顺序、非线性程度或计算成本给案例分级。
 
-四个案例覆盖互补而平级的验证维度：Poisson 覆盖稳态线性椭圆算子，Burgers 覆盖非线性时变高梯度解，顶盖驱动方腔覆盖多输出、不可压约束和动量耦合，二维传热覆盖真实物理量、量纲校对和复杂热边界。每个案例都拥有自己的 `PhysicalModelAuthority`、`UnitSystemContract`、`ReferenceEvidence`、用户确认指标契约和多 seed 证据；一个案例的单位、ROI 或 guardrail 不得隐式进入另一个案例。
+三个当前案例覆盖互补而平级的验证维度：Poisson 覆盖稳态线性椭圆算子，Burgers 覆盖非线性时变高梯度解，二维传热覆盖真实物理量、量纲校对和复杂热边界。每个案例都拥有自己的 `PhysicalModelAuthority`、`UnitSystemContract`、`ReferenceEvidence`、用户确认指标契约和多 seed 证据；一个案例的单位、ROI 或 guardrail 不得隐式进入另一个案例。
 
 Burgers 保持 `u_t + u*u_x - (0.01/pi)*u_xx = 0`、独立收敛参考和用户确认的 `relative_l2 -> max_abs` 指标。Poisson 必须从已有 worker/provider 基础补齐同等级的受治理多 seed 科学验证，而不再只作为语义隔离回归。
 
-顶盖驱动方腔采用二维稳态不可压 Navier-Stokes、单位方腔、`Re=100`、顶盖 `u=1,v=0`、其余壁面无滑移和零均值压力 gauge。独立 CFD 参考必须通过网格收敛，并用 Ghia 中心线速度基准交叉核验。PINN 输出 `u,v,p`。用户确认字典序主指标为速度场 `relative_l2 -> vector max_abs -> centerline velocity RMSE`；壁面速度是硬约束，连续性残差、动量残差、压力 gauge 和 gauge-invariant 压力梯度误差是 guardrail 或诊断证据。决策前必须定位速度矢量最大误差、中心线偏差和高剪切区域。
+已实现的顶盖驱动方腔参考、worker 和 NS domain provider 保留为非活动原型。它们不得被默认导入通用核心，也不得计入当前发布完成度；未来恢复时必须重新取得架构确认，并独立完成指标确认、多 seed、局部误差、replay 和 provenance 全套门禁。
+
+## Decision 7: Make the four operational layers one explicit closed loop
+
+```text
+MCP quick diagnosis
+  -> manifest-driven Project Adapter
+  -> LangGraph/CLI audit, approval and execution
+  -> deterministic Post-run Evaluator
+  -> immutable evidence candidate
+```
+
+项目适配器只扫描显式 project root 和 include paths，计算 source snapshot，并从已声明的物理、单位、指标、实验和运行信息生成 `OperatorCase`。缺失或歧义字段成为结构化 unresolved records；适配器不得从变量名、目录名或单一案例模板静默推断 PDE、单位换算、参考真值或指标优先级。
+
+MCP 快速诊断通过独立 stdio 子进程和只读工具注解调用现有 `pinn-hybrid-rag`。它返回初步检查与来源锚点，但不拥有治理契约、审批状态或执行副作用。
+
+运行后评估从显式字段 artifact contract 加载 baseline、candidate 和 reference，先执行对齐和 `max_abs` 位置分析，再按用户确认的 `MetricContract` 做确定性比较。报告与决策作为不可覆盖 JSON artifact 固化；只有验证通过且满足重复证据要求的结果才能成为 Wiki/Skill 候选，仍不得自动发布。
 
 ## Failure and Recovery Semantics
 
@@ -166,11 +182,12 @@ Burgers 保持 `u_t + u*u_x - (0.01/pi)*u_xx = 0`、独立收敛参考和用户�
 3. AutoDL backend 的只读 preflight、耐久 launch、断线对账和传输校验通过。
 4. Qwen3 provider 在固定 revisions 下重现质量门禁，索引 rebuild/switch/rollback 通过。
 5. CLI 的文本/JSON/退出码/无隐式 cwd/审批门禁通过。
-6. Poisson、Burgers、顶盖驱动方腔 Navier-Stokes 和二维传热都完成各自受治理的多 seed 科学验证，按平级案例矩阵报告且结论不越界。
-7. 编排、MCP、OpenSpec、架构隔离和 credential scan 全部通过。
+6. Poisson、Burgers 和二维传热完成各自受治理的多 seed 科学验证，按平级案例矩阵报告且结论不越界；NS full qualification 明确为延期项。
+7. MCP 诊断、项目适配、编排执行、运行后评估和不可覆盖证据固化的端到端契约测试通过。
+8. 编排、MCP、OpenSpec、架构隔离和 credential scan 全部通过。
 
 ## Open Questions
 
 - Phase 2 完成后是否增加 Web UI；这不阻断当前 CLI 产品化。
-- 顶盖驱动方腔完成后是否再增加 Taylor-Green vortex 作为具有解析结构的瞬态不可压补充案例；这不改变现有四个案例的平级关系。
+- 何时恢复顶盖驱动方腔 full qualification，以及届时是否增加 Taylor-Green vortex；两者均不阻断当前三个平级案例的发布资格验证。
 - 是否将 artifact store 从文件系统升级为对象存储；当前仍保持显式接口，不在本 change 引入新服务。

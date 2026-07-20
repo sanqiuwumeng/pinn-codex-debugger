@@ -516,6 +516,20 @@ class OperatorCliTests(unittest.TestCase):
                 time.sleep(0.05)
             self.assertIsNotNone(status_payload)
             self.assertEqual(status_payload["code"], "COMPLETED")
+            collection = root / "collected"
+            collect_code, collect_payload = invoke(
+                "collect",
+                "--runtime-root",
+                str(runtime),
+                "--workflow",
+                "workflow-smoke",
+                "--destination",
+                str(collection),
+                "--json",
+            )
+            self.assertEqual(collect_code, 0)
+            self.assertEqual(collect_payload["code"], "COLLECTION_COMPLETE")
+            self.assertTrue((collection / "metrics.json").is_file())
             replay_code, replay_payload = invoke(
                 "replay",
                 "--runtime-root",
