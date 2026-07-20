@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "approval_id": "poisson-metric-priority-approval-20260720",
+  "workflow_id": "poisson-qualification-20260716",
+  "kind": "METRIC_PRIORITY",
+  "decision": "APPROVED",
+  "approved_by": "user",
+  "approved_at": "2026-07-20T06:33:43Z",
+  "scope": "Poisson relative_l2 then PDE residual RMS, boundary max_abs hard constraint, diagnostics only, and one 12.5 percent localized-collocation intervention",
+  "evidence_refs": []
+}

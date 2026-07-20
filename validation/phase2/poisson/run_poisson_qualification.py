@@ -187,6 +187,7 @@ def _case_contracts(worker: Path) -> tuple[
         quantity_units={
             "coordinate": "dimensionless",
             "solution": "dimensionless",
+            "u": "dimensionless",
             "forcing": "dimensionless",
         },
         source_refs=(_source_ref(worker, "case contract"),),
@@ -370,7 +371,7 @@ def _run_stage(
     )
     backend_root = root / "backend" / run_name
     backend_root.mkdir(parents=True)
-    collection_root = root / "collected" / run_name
+    collection_root = _collection_directory(root, run_name)
     runner = ManifestFirstRunner(
         SQLiteRunRegistry(registry_path), _build_local_backend(backend_root)
     )
@@ -386,6 +387,12 @@ def _run_stage(
     if completed.exit_code != 0:
         raise RuntimeError(f"Poisson stage failed: {run_name}")
     return manifest, completed, output_directory
+
+
+def _collection_directory(root: Path, run_name: str) -> Path:
+    destination = root / "collected" / run_name
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    return destination
 
 
 def _field(output: Path, artifact_ref: ArtifactRef) -> tuple[FieldData, FieldData]:
