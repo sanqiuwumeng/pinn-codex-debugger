@@ -71,12 +71,12 @@
 ## 9. Active Peer-Case Scientific Validation Extension
 
 - [x] 9.1 Record the user's latest scope decision: Poisson, Burgers and 2D heat transfer are the current peer scientific validation cases; retain the NS prototype but defer its full qualification without making it a release gate.
-- [ ] 9.2 Promote the existing Poisson implementation to the same governed multi-seed scientific lifecycle and retain all accepted and rejected outcomes.
+- [x] 9.2 Promote the existing Poisson implementation to the same governed multi-seed scientific lifecycle and retain all accepted and rejected outcomes.
 - [x] 9.3 Retain the completed independent `Re=100` lid-driven-cavity CFD reference as non-gating future evidence.
 - [x] 9.4 Retain the completed multi-output `u,v,p` NS worker and physically isolated domain provider without default activation.
 - Deferred 9.5: NS audit, approved metric contract, smoke and multi-seed full qualification require a future explicit architecture confirmation.
-- [ ] 9.6 Produce the current three-case peer case-by-capability evidence matrix and regenerate governed Wiki/Skill candidates without automatic publication.
-- [ ] 9.7 Run full engineering, scientific, credential, semantic-isolation and artifact-provenance release gates, then issue a superseding evidence report and close this extension only if no mandatory task remains.
+- [x] 9.6 Produce the current three-case peer case-by-capability evidence matrix and regenerate governed Wiki/Skill candidates without automatic publication.
+- [x] 9.7 Run full engineering, scientific, credential, semantic-isolation and artifact-provenance release gates, then issue a superseding evidence report and close this extension only if no mandatory task remains.
 
 ## 10. Unified Operational Closed Loop
 
@@ -87,4 +87,4 @@
 - [x] 10.5 Persist comparison, decision and evidence-candidate artifacts with no-overwrite semantics; do not automatically publish Wiki or Skill entries.
 - [x] 10.6 Prove through CLI and service tests that missing metric priority, ambiguous physics, invalid alignment, failed smoke and missing approvals stop the loop at a governed state.
 - [x] 10.7 Add a domain-neutral example and operator documentation showing the actual command/data call sequence.
-- [ ] 10.8 Run the complete orchestrator, MCP, OpenSpec, architecture isolation and credential gates and record a final evidence report.
+- [x] 10.8 Run the complete orchestrator, MCP, OpenSpec, architecture isolation and credential gates and record a final evidence report.
