@@ -23,8 +23,14 @@ from pinn_strategy_system.application import (
     PostRunEvaluationService,
     RagApplicationService,
     SubprocessModelTransportFactory,
+    WikiPublicationApplicationService,
     load_execution_backend,
     load_post_run_contract,
+)
+from pinn_strategy_system.contracts import (
+    ApprovalRecord,
+    WikiEntryCandidate,
+    WikiPublicationSpec,
 )
 
 
@@ -87,6 +93,14 @@ def build_parser() -> argparse.ArgumentParser:
     query.add_argument("--case", required=True)
     query.add_argument("--model-profile", required=True)
     query.add_argument("--query", required=True)
+    wiki = commands.add_parser("wiki")
+    wiki_commands = wiki.add_subparsers(dest="wiki_command", required=True)
+    publish = wiki_commands.add_parser("publish")
+    _common_arguments(publish)
+    publish.add_argument("--candidate", required=True)
+    publish.add_argument("--approval", required=True)
+    publish.add_argument("--publication", required=True)
+    publish.add_argument("--knowledge-root", required=True)
     return parser
 
 
@@ -243,6 +257,22 @@ def _dispatch(
             source_root = _input_directory(arguments.source, base_directory)
             return service.rebuild(source_root=source_root, case=case)
         return service.query(case=case, query=arguments.query)
+    if arguments.command == "wiki":
+        candidate_path = _input_file(arguments.candidate, base_directory)
+        approval_path = _input_file(arguments.approval, base_directory)
+        publication_path = _input_file(arguments.publication, base_directory)
+        knowledge_root = _input_directory(
+            arguments.knowledge_root,
+            base_directory,
+        )
+        return WikiPublicationApplicationService(
+            runtime_root=runtime_root,
+            knowledge_root=knowledge_root,
+        ).publish(
+            candidate=_load_model(candidate_path, WikiEntryCandidate),
+            approval=_load_model(approval_path, ApprovalRecord),
+            publication=_load_model(publication_path, WikiPublicationSpec),
+        )
     raise CliInputError("unsupported command")
 
 
@@ -264,6 +294,15 @@ def _load_project_manifest(path: Path) -> ProjectAdapterManifest:
         )
     except (OSError, ValidationError) as error:
         raise CliInputError("project adapter manifest is invalid") from error
+
+
+def _load_model(path: Path, model_type):
+    if path.stat().st_size > 4 * 1024 * 1024:
+        raise CliInputError("input contract exceeds the 4 MiB limit")
+    try:
+        return model_type.model_validate_json(path.read_text(encoding="utf-8"))
+    except (OSError, ValidationError) as error:
+        raise CliInputError("input contract is invalid") from error
 
 
 def _runtime_root(value: str) -> Path:
@@ -327,6 +366,9 @@ def _command_label(arguments: argparse.Namespace | None) -> str:
     if arguments.command == "rag":
         subcommand = getattr(arguments, "rag_command", "unknown")
         return f"rag {subcommand}"
+    if arguments.command == "wiki":
+        subcommand = getattr(arguments, "wiki_command", "unknown")
+        return f"wiki {subcommand}"
     return arguments.command
 
 

@@ -26,6 +26,7 @@ from .runtime_profiles import (
     load_execution_backend,
 )
 from .service import OperatorApplicationService
+from .wiki_service import WikiPublicationApplicationService
 
 __all__ = [
     "ApplicationResult",
@@ -48,6 +49,7 @@ __all__ = [
     "SQLiteWorkflowCatalog",
     "SubprocessModelTransportFactory",
     "SourceFileRecord",
+    "WikiPublicationApplicationService",
     "load_execution_backend",
     "load_post_run_contract",
 ]

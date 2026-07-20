@@ -5,6 +5,7 @@ from .audit import AppendOnlyAuditStore, AuditRecord
 from .checkpoints import SQLiteCheckpointStore
 from .layout import StoreLayout
 from .mlflow_runs import LocalMlflowRunStore, StoredRunRecord
+from .wiki import PublishedWikiStore, WikiPublicationConflictError
 
 __all__ = [
     "AppendOnlyAuditStore",
@@ -15,4 +16,6 @@ __all__ = [
     "SQLiteCheckpointStore",
     "StoreLayout",
     "StoredRunRecord",
+    "PublishedWikiStore",
+    "WikiPublicationConflictError",
 ]

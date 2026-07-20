@@ -16,11 +16,13 @@ from pinn_strategy_system.contracts import (
     DecisionRecord,
     DecisionStatus,
     PublishedSkill,
+    PublishedWikiEntry,
     ResultStatus,
     SkillReplayReport,
     ValidationReport,
     WikiEntryCandidate,
     WikiInvalidationRecord,
+    WikiPublicationSpec,
 )
 
 
@@ -103,6 +105,19 @@ class KnowledgeGovernanceService:
         return KnowledgeVersionTransition(
             previous=WikiEntryCandidate.model_validate(previous_payload),
             current=current,
+        )
+
+    def publish_wiki(
+        self,
+        *,
+        candidate: WikiEntryCandidate,
+        approval: ApprovalRecord,
+        publication: WikiPublicationSpec,
+    ) -> PublishedWikiEntry:
+        return PublishedWikiEntry(
+            publication=publication,
+            candidate=candidate,
+            approval=approval,
         )
 
     def invalidate_wiki(

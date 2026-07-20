@@ -62,6 +62,7 @@ from .models import (
     PhysicalModelAuthority,
     PhysicalParameterInput,
     PhysicalParameterRecord,
+    PublishedWikiEntry,
     PublishedSkill,
     PreparedRun,
     ReferenceEvidence,
@@ -86,6 +87,8 @@ from .models import (
     WorkflowRequest,
     WikiEntryCandidate,
     WikiInvalidationRecord,
+    WikiPublicationReceipt,
+    WikiPublicationSpec,
 )
 from .state import WorkflowState, WorkflowStateEnvelope, validate_workflow_state
 
@@ -143,6 +146,7 @@ __all__ = [
     "PhysicalModelAuthority",
     "PhysicalParameterInput",
     "PhysicalParameterRecord",
+    "PublishedWikiEntry",
     "PublishedSkill",
     "PreparedRun",
     "ReferenceEvidence",
@@ -172,6 +176,8 @@ __all__ = [
     "WorkflowRequest",
     "WikiEntryCandidate",
     "WikiInvalidationRecord",
+    "WikiPublicationReceipt",
+    "WikiPublicationSpec",
     "WorkflowStage",
     "WorkflowState",
     "WorkflowStateEnvelope",

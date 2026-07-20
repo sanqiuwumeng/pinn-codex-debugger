@@ -993,6 +993,69 @@ class WikiEntryCandidate(VersionedModel):
         return self
 
 
+class WikiPublicationSpec(VersionedModel):
+    wiki_id: Identifier
+    published_at: datetime
+    project_id: Identifier
+    repo_commit: str | None = Field(default=None, max_length=128)
+    model_family: str | None = Field(default=None, max_length=256)
+    pde_family: str | None = Field(default=None, max_length=256)
+    task_type: str | None = Field(default=None, max_length=256)
+    domain_provider_id: str | None = Field(default=None, max_length=256)
+    output_channels: tuple[str, ...] = ()
+    dimensional_signatures: tuple[str, ...] = ()
+    failure_signatures: tuple[str, ...] = ()
+    framework: str | None = Field(default=None, max_length=256)
+    language: str = Field(min_length=2, max_length=32)
+    claims: dict[str, ShortText] = Field(default_factory=dict)
+
+
+class PublishedWikiEntry(VersionedModel):
+    publication: WikiPublicationSpec
+    candidate: WikiEntryCandidate
+    approval: ApprovalRecord
+    validity_status: KnowledgeValidity = KnowledgeValidity.VALID
+
+    @model_validator(mode="after")
+    def publication_requires_exact_human_approval(self) -> Self:
+        if self.candidate.validity_status is not KnowledgeValidity.CANDIDATE:
+            raise ValueError("only an active Wiki candidate can be published")
+        if self.approval.kind is not ApprovalKind.KNOWLEDGE_PROMOTION:
+            raise ValueError(
+                "Wiki publication requires KNOWLEDGE_PROMOTION approval"
+            )
+        if self.approval.decision is not ApprovalDecision.APPROVED:
+            raise ValueError("Wiki publication requires an approved decision")
+        expected_scope = f"wiki:{self.candidate.candidate_id}"
+        if self.approval.scope != expected_scope:
+            raise ValueError("Wiki approval scope must match its candidate")
+        approved_at = self.approval.approved_at
+        published_at = self.publication.published_at
+        if (
+            approved_at.tzinfo is None
+            or approved_at.utcoffset() is None
+            or published_at.tzinfo is None
+            or published_at.utcoffset() is None
+        ):
+            raise ValueError("Wiki approval and publication times must be timezone-aware")
+        if published_at < approved_at:
+            raise ValueError("Wiki publication cannot precede human approval")
+        if self.validity_status is not KnowledgeValidity.VALID:
+            raise ValueError("newly published Wiki entries must start VALID")
+        return self
+
+
+class WikiPublicationReceipt(VersionedModel):
+    wiki_id: Identifier
+    version: int = Field(ge=1)
+    directory_uri: ShortText
+    publication_ref: ArtifactRef
+    markdown_ref: ArtifactRef
+    index_ref: ArtifactRef
+    manifest_ref: ArtifactRef
+    idempotent_replay: bool
+
+
 class KnowledgeVersionTransition(VersionedModel):
     previous: WikiEntryCandidate
     current: WikiEntryCandidate
