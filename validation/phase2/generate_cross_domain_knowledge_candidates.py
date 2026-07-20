@@ -52,6 +52,14 @@ def _write_json(path: Path, payload: Any) -> None:
     )
 
 
+def _accepted_seed_ids(per_seed: list[dict[str, Any]]) -> list[int]:
+    return [
+        int(item["seed"])
+        for item in per_seed
+        if item["decision"] == "ACCEPT"
+    ]
+
+
 def generate(
     *,
     thermal_root: Path,
@@ -175,11 +183,9 @@ def generate(
                 "capability": "physical units, unit consistency and complex thermal boundaries",
                 "reference": "user-authoritative physical model with test reference evidence",
                 "metric_policy": "max_abs -> RMSE with MAE guardrail",
-                "accepted_seeds": [
-                    item["seed"]
-                    for item in thermal_aggregate["per_seed"]
-                    if item["decision"]["status"] == "ACCEPT"
-                ],
+                "accepted_seeds": _accepted_seed_ids(
+                    thermal_aggregate["per_seed"]
+                ),
                 "rejected_seeds": thermal_aggregate["rejected_seeds"],
                 "evidence_ref": cross_domain_refs[0].model_dump(mode="json"),
             },
