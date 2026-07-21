@@ -11,14 +11,13 @@ evidence boundaries without moving those side effects into the MCP server.
 
 ## Architecture Scope
 
-The strategy system is PINN-general rather than heat-transfer-specific:
+The strategy system is PINN-general:
 
 - the user's PDE, BC, IC, geometry and parameters define the physical authority;
 - analytic, experimental, numerical and teacher data are optional reference
   evidence, not universal truth sources;
 - model units may be SI or non-SI when their conversion chain is explicit and
   internally consistent;
-- generic field metrics and localization stay in the core;
 - heat transfer, fluid, elasticity, wave and inverse-problem metrics are loaded
   only through explicitly selected domain providers;
 - ROI, time windows, thresholds and provider selection belong to each case
@@ -55,9 +54,7 @@ then applies the user-confirmed metric policy and guardrails.
 
 See `orchestrator/examples/universal-pinn/README.md` for the actual command and
 data flow. The portable release includes Poisson and Burgers scientific
-qualification cases. Heat-transfer and Navier-Stokes projects use the same
-adapter and domain-provider interfaces without bundling machine-specific case
-histories or deferred prototypes.
+qualification cases.
 
 ## Product Scope
 
